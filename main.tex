@@ -35,6 +35,8 @@
 
 \documentclass{acm_proc_article-sp-sigmod09}
 \usepackage{url}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 \begin{document}
 %
 % --- Author Metadata here ---
@@ -95,11 +97,71 @@ Given a set of transactions, the goal is to identify patterns of attributes that
 Starting from the data mining problem statement, the big data one is to create a set of records, which are organized in tree-structured transactions, making sure that among the transactions there exist some frequent pattern.
 
 \section{Assumptions}
+\label{sec:assumptions}
 For the sake of simplification, some assumption exists.
 
-All the records contain at least three attributes: the \texttt{rid} to identify the record, the \texttt{tid} to recognize to which transaction the record belongs, and a \texttt{parent} field, containing the \texttt{rid} of the parent record -- which can be empty in case the considered record is the root of a transaction.
+All the records contain at least four attributes: the \texttt{rid} to identify the record; the \texttt{tid} to recognize to which transaction the record belongs; a \texttt{parent} field, containing the \texttt{rid} of the parent record -- which can be empty in case the considered record is the root of a transaction; at least another attribute, which can have any name and any type. The latter kind of attribute is called \emph{generic attribute}. The patterns are built -- and consequently searched for -- on \emph{generic attributes}, and not on the other three types, which do not create any pattern since they are used to describe the structure of the transactions.
+
+\newdef{definition}{Definition}
+\begin{definition}
+A \emph{generic attribute} is any attribute of a record which is not the \texttt{rid}, the \texttt{tid} or the \texttt{parent} attributes. These attributes represent the features of each record, and the patterns are made of \emph{generic attributes}.
+\end{definition}
 
 All the records are assumed to have the same attributes -- some of them may be empty. Each record has discrete values, belonging to finite sets of possible values. This assumption is needed to make the data mining project easier. From the point of view of the data generation, the absence of this constraint would not complicate anything.
+
+\section{Data generation}
+The data generation process is parameterized, in order to let the user to use the same tool to generate various scenarios in the same problem domain. The parameters are the following:
+\begin{itemize}
+\item the number of transaction $T$ to be generated, which is an integer;
+\item the number of patterns $P$ to generate, which are distributed among the transactions -- this is also an integer number;
+\item the average length of patterns $l$, which is a floating point number;
+\item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
+\item the number of values $m$ that each field can assume, which is an integer -- at least 1;
+\item a threshold $t$ that indicates at least how many times a pattern must appear to be considered a frequent pattern, this is also an integer.
+\end{itemize} 
+The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details.
+
+\subsection{Attribute generation}
+The very first part of the data generation process is about the attributes of the records. According to the assumptions made in Section~\ref{sec:assumptions}, each record has three attributes whose role is to uniquely identify a record -- the \texttt{rid} -- and to structure and relate records among them -- the \texttt{tid} to understand which transaction each record belongs to, and the \texttt{parent} to define the record hierarchy. In addition to these three, there is a certain number of \emph{generic attributes} that characterize each record.
+
+All the possible \emph{generic attributes} are generated. Without loss of generality, they all are generated as strings -- since every object can be represented by a string and built from a string. In particular, $n - 3$ strings are generated, which represent the names of the attributes -- which can be also seen the keys or the field names. Then, for each attribute, a list with $m$ possible values is generated. In other words, a vector $\boldsymbol{a}$ -- of $n$ elements -- and a matrix $\boldsymbol{M}$ -- with $n$ rows and $m$ columns -- are created. The vector $\boldsymbol{a}$ contains all the attribute names, and an entry $[i, j]$ of $\boldsymbol{M}$ is the string $j$ that the attribute $i$ can assume.
+
+To do so, let us assume the existence of a function that generates a random string, every time unique:
+\begin{verbatim}
+string random_string()
+\end{verbatim}
+which is used to generate the \emph{generic attributes}.
+
+With the Algorithm~\ref{generate_attributes} and Algorithm~\ref{generate_values}, $\boldsymbol{a}$ and $\boldsymbol{M}$ are generated.
+\begin{algorithm}
+\caption{Generate the attribute names and return a vector $\boldsymbol{a}$ that contains them.}
+\label{generate_attributes}
+\begin{algorithmic}[1]
+\Function{generateAttributeNames}{Integer $n$}
+\State $\boldsymbol{a} \gets new Integer[n]$
+\For{$i \gets 1 \text{ to } n$}
+	\State $\boldsymbol{a}_i \gets \text{ \texttt{random\_string() }} $ 
+\EndFor
+\Return $\boldsymbol{a}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Generate the attribute values and return a matrix $\boldsymbol{M}$ that contains them.}
+\label{generate_values}
+\begin{algorithmic}[1]
+\Function{generateAttributeValues}{Integer $n$, Integer $m$}
+\State $\boldsymbol{M} \gets new Integer[n][m]$
+\For{$i \gets 1 \text{ to } n$}
+	\For{$j \gets 1 \text{ to } m$}
+		\State $\boldsymbol{M}[i, j] \gets \text{ \texttt{random\_string() }} $ 
+	\EndFor
+\EndFor
+\Return $\boldsymbol{M}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Math Equations}
 You may want to display math equations in three distinct styles:
