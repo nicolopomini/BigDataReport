@@ -37,6 +37,7 @@
 \usepackage{url}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\usepackage{float}
 \begin{document}
 %
 % --- Author Metadata here ---
@@ -89,7 +90,18 @@ A transaction $\boldsymbol{T}$ is a set of records $\{\boldsymbol{r_1}, \boldsym
 \label{fig:transaction}
 \end{figure}
 
+Let us define a pattern.
+\newdef{definition}{Definition}
+\begin{definition}
 A pattern is a set of ordered attributes and values belonging to possibly different records in the same transaction. In other words, a pattern is any ordered subset of $\bigcup\limits_{i=1}^{n} \bigcup\limits_{j=1}^{m} \boldsymbol{r_i}<a_j \colon v_j>$, where the ordering is given by the hierarchy of the transaction. For example, in Figure~\ref{fig:transaction} some possible example of pattern are $\{a_1 \colon v_1, a_3 \colon v_3\}$ or $\{a_2 \colon v_2, a_3 \colon v_3\}$, but not $\{a_4 \colon v_4, a_1 \colon v_1\}$, beacuse the latter breakes the hierarchic order.
+
+A pattern has a tree structure, and it can be developed in three different ways.
+\begin{itemize}
+\item Horizontal -- which means that the pattern is made of a single record, with more than an attribute involved. This kind of pattern is a sort of a logical implication regarding two or more attributes in the same record, where the existence of a certain value implies the existence of some other values in the same record. Referring to Figure~\ref{fig:transaction}, the only possible horizontal pattern is $\{a_1 \colon v_1, a_2 \colon v_2\}$.
+\item vertical -- when the pattern involves more than one record, and for each record one field is concerned, creating a tree structure. In this case, at least two records must be used to create such a pattern, otherwise any frequent value -- like every \texttt{tid} -- would be a pattern. The records in which appear a value belonging to the pattern do not have to be contiguous: in fact, it is possible to have a pattern made of three nodes -- for example $x, y, z$, with $x$ parent of $y$ and $y$ parent of $z$, where the existance of a value in $x$ implies the existance of a value in $z$, with any possible value in $y$. Referring to Figure~\ref{fig:transaction}, the possible vertical patterns are $\{a_1 \colon v_1, a_3 \colon v_3\}$, $\{a_2 \colon v_2, a_3 \colon v_3\}$, $\{a_1 \colon v_1, a_4 \colon v_4\}$, $\{a_2 \colon v_2, a_4 \colon v_4\}$, but also $\{a_3 \colon v_3, a_4 \colon v_4\}$. The latter is an example of a non-contiguos pattern: the parent has any value, and the two children have a value that implies the other one.
+\item both horizontal and vertical -- the case of a vertical pattern, in which the records can have more than one attribute involved in the pattern. Referring to Figure~\ref{fig:transaction}, they can be $\{a_1 \colon v_1, a_2 \colon v_2, a_3 \colon v_3\}$, $\{a_1 \colon v_1, a_2 \colon v_2, a_4 \colon v_4\}$ or $\{a_1 \colon v_1, a_2 \colon v_2, a_3 \colon v_3, a_4 \colon v_4\}$.
+\end{itemize}
+\end{definition}
 
 Given a set of transactions, the goal is to identify patterns of attributes that are frequent, which means transaction that appear at least a given number of time $f$.
 
@@ -102,7 +114,6 @@ For the sake of simplification, some assumption exists.
 
 All the records contain at least four attributes: the \texttt{rid} to identify the record; the \texttt{tid} to recognize to which transaction the record belongs; a \texttt{parent} field, containing the \texttt{rid} of the parent record -- which can be empty in case the considered record is the root of a transaction; at least another attribute, which can have any name and any type. The latter kind of attribute is called \emph{generic attribute}. The patterns are built -- and consequently searched for -- on \emph{generic attributes}, and not on the other three types, which do not create any pattern since they are used to describe the structure of the transactions.
 
-\newdef{definition}{Definition}
 \begin{definition}
 A \emph{generic attribute} is any attribute of a record which is not the \texttt{rid}, the \texttt{tid} or the \texttt{parent} attributes. These attributes represent the features of each record, and the patterns are made of \emph{generic attributes}.
 \end{definition}
@@ -110,6 +121,7 @@ A \emph{generic attribute} is any attribute of a record which is not the \texttt
 All the records are assumed to have the same attributes -- some of them may be empty. Each record has discrete values, belonging to finite sets of possible values. This assumption is needed to make the data mining project easier. From the point of view of the data generation, the absence of this constraint would not complicate anything.
 
 \section{Data generation}
+\label{sec:generation}
 The data generation process is parameterized, in order to let the user to use the same tool to generate various scenarios in the same problem domain. The parameters are the following:
 \begin{itemize}
 \item the number of transaction $T$ to be generated, which is an integer;
@@ -162,6 +174,86 @@ With the Algorithm~\ref{generate_attributes} and Algorithm~\ref{generate_values}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
+
+\subsection{Pattern generation}
+Once the possible names and values of the fields are generated, it is the turn for the pattern to be created. To do so, let us define a tree-based data structure -- called PatternTree -- used to generate the patterns.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|ll|} \hline
+\textbf{PatternTree} & \\ \hline
+\textbf{parent} & PatternTree \\ \hline
+\textbf{children} & PatternTree[] \\ \hline
+\textbf{fields} & Dict[string, string] \\
+\hline\end{tabular}
+\caption{PatternTree object definition.}
+\label{tab:patterntree}
+\end{table}
+
+As can be seen in Table~\ref{tab:patterntree}, the object is a generic tree with an arbitrary number of children for every node. Furthermore, the attribute \emph{fields} represent the list of fields that characterize the pattern: this means that the values contained in this attribute form the pattern itself. For example, if \emph{fields} of a given node is equal to $ \{ color : blue \} $, it means that in the pattern will appear a node with the attribute \emph{color} set to \emph{blue}. The attribute \emph{fields} is a dictionary, with keys the field names, and values the field values. It does not contain the fields \texttt{rid}, \texttt{tid} and \texttt{parent}, because they are specific for a record, and not related to the pattern.
+
+The generation of the patterns relies on four of the parameters listed at the beginning of Section~\ref{sec:generation}: the number of patterns to be generated $P$, the average length of a pattern $l$, the number of global fields $n$ and the number of values for each field $m$.
+
+Let $Pl$ be the length of a pattern, which represents the number of edged it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decider using a Poisson random variable with mean $l$. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is chosen from $\boldsymbol{M}$. All the nodes are saved into a set, called \emph{generated}.
+
+Once $1 + Pl$ nodes are generated, another set is created, called \emph{included}. The latter represents the nodes exctacted from \emph{generated} to whom a parent node have been assigned. At the beginnig, this set is empty. Randomly, one node from \emph{generated} is taken and moved into \emph{included}, assigning to it a \texttt{null} parent ($\bot$ symbol): this is the root node of the pattern. 
+
+In turn, each node in \emph{generated} is taken and moved into \emph{included}, assigning to it a parent picked from the latter set. In this way every tree takes shapes.
+
+The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields, while the Algorithm~\ref{generate_patterns} generates $P$ patterns, choosing the length of each one using a Poisson random variable. The latter returns a list of PatternTree object, each one is the root node of a pattern.
+
+\begin{algorithm}
+\caption{Generate a node.}
+\label{generate_node}
+\begin{algorithmic}[1]
+\Function{generateNode}{Integer $n$, float $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\State $fields \gets \{\}$
+\For{$i \gets 1 \text{ to } k$}
+	\State $k \gets x : x \in [1, n]$
+	\State $j \gets x : x \in [1, m]$
+	\State $field\_name \gets \boldsymbol{a}_k$
+	\State $field\_value \gets \boldsymbol{M}[k, j]$
+	\State $fields[field\_name] \gets field\_value$
+\EndFor
+\State $node \gets PatternTree()$
+\State $node_{fields} \gets fields$
+\Return $node$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Generate the patterns.}
+\label{generate_patterns}
+\begin{algorithmic}[1]
+\Function{generatePatterns}{Integer $P$, float $l$, Integer $n$, Integer $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\State $patterns \gets \{\}$
+\For{$i \gets 1 \text{ to } P$}
+	\State $Pl \gets Poisson(l)$
+	\State $generated \gets \{\}$
+	\For{$j \gets 1 \text{ to } 1 + Pl$}
+		\State $node \gets generate\_node(n, m, \boldsymbol{a}, \boldsymbol{M}) $ 
+		\State $generated \gets generated \cup \{node\}$
+	\EndFor
+	\State $included \gets \{\}$
+	\State $root \gets random\_item(generated)$
+	\State $root_{parent} = \bot$
+	\State $included \gets included \cup \{root\}$
+	\State $generated \gets generated \setminus \{root\}$
+	\For{$j \gets 1 \text{ to } 1 + Pl$}
+		\State $node \gets random\_item(generated)$
+		\State $parent \gets random\_item(included)$
+		\State $node_{parent} = parent$
+		\State $included \gets included \cup \{node\}$
+		\State $generated \gets generated \setminus \{node\}$
+	\EndFor
+	\State $patterns \gets patterns \cup \{root\}$
+\EndFor
+\Return $patterns$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
 
 \subsection{Math Equations}
 You may want to display math equations in three distinct styles:
@@ -289,7 +381,7 @@ an antiderivative for $f$ on $[a,b]$, then
 
 The other uses the \textbf{definition} environment, created
 by the \texttt{{\char'134}newdef} command:
-\newdef{definition}{Definition}
+
 \begin{definition}
 If $z$ is irrational, then by $e^z$ we mean the
 unique number which has
