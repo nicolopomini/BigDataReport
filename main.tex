@@ -194,7 +194,7 @@ As can be seen in Table~\ref{tab:patterntree}, the object is a generic tree with
 
 The generation of the patterns relies on four of the parameters listed at the beginning of Section~\ref{sec:generation}: the number of patterns to be generated $P$, the average length of a pattern $l$, the number of global fields $n$ and the number of values for each field $m$.
 
-Let $Pl$ be the length of a pattern, which represents the number of edged it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decider using a Poisson random variable with mean $l$. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is chosen from $\boldsymbol{M}$. All the nodes are saved into a set, called \emph{generated}.
+Let $Pl$ be the length of a pattern, which represents the number of edged it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decider using a Poisson random variable with mean $l$. This type of variable is chosen because it models events occurring successively and independently in a given time frame, and this scenario fits perfectly because the structure -- and the length -- of a single pattern is independent from the others. Furthermore, pubblications like \cite{agrawal1994fast} and \cite{ivancsy2006time} use the same approach during the pattern generation. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is chosen from $\boldsymbol{M}$. All the nodes are saved into a set, called \emph{generated}.
 
 Once $1 + Pl$ nodes are generated, another set is created, called \emph{included}. The latter represents the nodes exctacted from \emph{generated} to whom a parent node have been assigned. At the beginnig, this set is empty. Randomly, one node from \emph{generated} is taken and moved into \emph{included}, assigning to it a \texttt{null} parent ($\bot$ symbol): this is the root node of the pattern. 
 
@@ -254,6 +254,14 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Transaction generation}
+\dots
+
+\section{Implementation}
+The various steps and algorithms explained in Section~\ref{sec:generation} are implemented in a program, that takes as input the parameters listed in the previous section, and it produces a set of records organized in transactions, saving the generated data into a \texttt{csv} file. The latter has $n + 1$ rows, where the first line lists the names of the fields present inside each record, and the following $n$ lines contains the value of the fields, one record per line.
+
+The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices.
+\dots
 
 \subsection{Math Equations}
 You may want to display math equations in three distinct styles:
