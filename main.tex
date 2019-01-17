@@ -216,7 +216,7 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 	\State $fields[field\_name] \gets field\_value$
 \EndFor
 \State $node \gets PatternTree()$
-\State $node_{fields} \gets fields$
+\State $node_{fields} \gets fields$ \\
 \Return $node$
 \EndFunction
 \end{algorithmic}
@@ -255,69 +255,58 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \end{algorithm}
 
 \subsection{Transaction generation}
-\dots
+When the patterns are generated, it is the turn for the entire transactions to be created. To do so, another data structure based on trees is defined -- called TransactionTree -- is a similar way of the one in Table~\ref{tab:patterntree}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|ll|} \hline
+\textbf{TransactionTree} & \\ \hline
+\textbf{parent} & TransactionTree \\ \hline
+\textbf{children} & TransactionTree[] \\ \hline
+\textbf{rid} & string \\ \hline
+\textbf{tid} & string \\ \hline
+\textbf{fields} & Dict[string, string] \\
+\hline\end{tabular}
+\caption{TransactionTree object definition.}
+\label{tab:transactiontree}
+\end{table}
+
+The object defined in Table~\ref{tab:transactiontree} adds to each record a \texttt{rid} and the \texttt{tid}: the former is unique for each record, while the latter is unique for each transaction.
+
+Starting from the PatternTree objects generated in the previous step, they are converted into TransactionTree objects adding them an unique \texttt{rid} and the missing fields -- those fields that will not be part of the pattern. The \texttt{tid} is not set here, it will be added later. This transformation is done in Algorithm~\ref{translate_patterns}, which is initially called passing as PatternTree $t$ the root of a pattern, and as PatternTree $p$ a \texttt{null} value $\bot$. The function transform every node of the pattern recursively.
+
+\begin{algorithm}
+\caption{Transform a PatternTree into a TransactionTree.}
+\label{translate_patterns}
+\begin{algorithmic}[1]
+\Function{translatePatterns}{PatternTree $t$, PatternTree $p$, Integer $n$, Integer $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\State $rid \gets \text{ \texttt{random\_string() }}$
+\State $fields \gets t_{fields}$
+\For{$i \gets 1 \text{ to } n$}
+	\If{$\boldsymbol{a}_i \notin fields$}
+		\State $j \gets x : x \in [1, m]$
+		\State $fields[\boldsymbol{a}_i] \gets \boldsymbol{M}[i,j]$
+	\EndIf
+\EndFor
+\State $children \gets \{\}$
+\For{$child \in t_{children}$}
+	\State $children \gets children \cup \{translatePatterns(child, t, n, m, \boldsymbol{a}, \boldsymbol{M}\}$
+\EndFor
+\State $node \gets TransactionTree()$
+\State $node_{rid} \gets rid$
+\State $node_{children} \gets children$
+\State $node_{fields} \gets fields$ \\
+\Return $node$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \section{Implementation}
 The various steps and algorithms explained in Section~\ref{sec:generation} are implemented in a program, that takes as input the parameters listed in the previous section, and it produces a set of records organized in transactions, saving the generated data into a \texttt{csv} file. The latter has $n + 1$ rows, where the first line lists the names of the fields present inside each record, and the following $n$ lines contains the value of the fields, one record per line.
 
-The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices.
-\dots
+The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices. The parameters are passed as arguments with flags and values when the program is started. The user can specify her own parameters, or use the default ones. It is also possible to set a flag to let the program print on the standard output which are the generated pattern. In this way is easy to test the correctness of the miner software that searches for these patterns.
 
-\subsection{Math Equations}
-You may want to display math equations in three distinct styles:
-inline, numbered or non-numbered display.  Each of
-the three are discussed in the next sections.
-
-\subsubsection{Inline (In-text) Equations}
-A formula that appears in the running text is called an
-inline or in-text formula.  It is produced by the
-\textbf{math} environment, which can be
-invoked with the usual \texttt{{\char'134}begin. . .{\char'134}end}
-construction or with the short form \texttt{\$. . .\$}. You
-can use any of the symbols and structures,
-from $\alpha$ to $\omega$, available in
-\LaTeX\cite{Lamport:LaTeX}; this section will simply show a
-few examples of in-text equations in context. Notice how
-this equation: \begin{math}\lim_{n\rightarrow \infty}x=0\end{math},
-set here in in-line math style, looks slightly different when
-set in display style.  (See next section).
-
-\subsubsection{Display Equations}
-A numbered display equation -- one set off by vertical space
-from the text and centered horizontally -- is produced
-by the \textbf{equation} environment. An unnumbered display
-equation is produced by the \textbf{displaymath} environment.
-
-Again, in either environment, you can use any of the symbols
-and structures available in \LaTeX; this section will just
-give a couple of examples of display equations in context.
-First, consider the equation, shown as an inline equation above:
-\begin{equation}\lim_{n\rightarrow \infty}x=0\end{equation}
-Notice how it is formatted somewhat differently in
-the \textbf{displaymath}
-environment.  Now, we'll enter an unnumbered equation:
-\begin{displaymath}\sum_{i=0}^{\infty} x + 1\end{displaymath}
-and follow it with another numbered equation:
-\begin{equation}\sum_{i=0}^{\infty}x_i=\int_{0}^{\pi+2} f\end{equation}
-just to demonstrate \LaTeX's able handling of numbering.
-
-\subsection{Tables}
-Because tables cannot be split across pages, the best
-placement for them is typically the top of the page
-nearest their initial cite.  To
-ensure this proper ``floating'' placement of tables, use the
-environment \textbf{table} to enclose the table's contents and
-the table caption.  The contents of the table itself must go
-in the \textbf{tabular} environment, to
-be aligned properly in rows and columns, with the desired
-horizontal and vertical rules.  Again, detailed instructions
-on \textbf{tabular} material
-is found in the \textit{\LaTeX\ User's Guide}.
-
-Immediately following this sentence is the point at which
-Table 1 is included in the input file; compare the
-placement of the table here with the table in the printed
-dvi output of this document.
+\section{Examples}
 
 \begin{table}
 \centering
@@ -331,18 +320,6 @@ $\Psi^2_1$ & 1 in 40,000& Unexplained usage\\
 \hline\end{tabular}
 \end{table}
 
-To set a wider table, which takes up the whole width of
-the page's live area, use the environment
-\textbf{table*} to enclose the table's contents and
-the table caption.  As with a single-column table, this wide
-table will ``float" to a location deemed more desirable.
-Immediately following this sentence is the point at which
-Table 2 is included in the input file; again, it is
-instructive to compare the placement of the
-table here with the table in the printed dvi
-output of this document.
-
-
 \begin{table*}
 \centering
 \caption{Some Typical Commands}
@@ -354,19 +331,6 @@ Command&A Number&Comments\\ \hline
 \texttt{{\char'134}table*}& 400& For wider tables\\ \hline\end{tabular}
 \end{table*}
 % end the environment with {table*}, NOTE not {table}!
-
-As was the case with tables, you may want a figure
-that spans two columns.  To do this, and still to
-ensure proper ``floating'' placement of tables, use the environment
-\textbf{figure*} to enclose the figure and its caption.
-\begin{figure*}
-\centering
-\epsfig{file=flies.eps}
-\caption{A sample black and white graphic (.eps format)
-that needs to span two columns of text.}
-\end{figure*}
-and don't forget to end the environment with
-{figure*}, not {figure}!
 
 \subsection{Theorem-like Constructs}
 Other common constructs that may occur in your article are
