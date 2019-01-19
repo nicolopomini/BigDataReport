@@ -39,6 +39,8 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{float}
 \begin{document}
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
 %
 % --- Author Metadata here ---
 \conferenceinfo{Big Data and Social Networks}{Academic year 2018-2019}
@@ -301,24 +303,33 @@ Starting from the PatternTree objects generated in the previous step, they are c
 \end{algorithmic}
 \end{algorithm}
 
+Next, a dictionary is created to determine in which transactions each pattern will appear. The dictionary uses the generated patterns as keys, and integer lists as values. The integer lists contain the indexes of the trees in which the pattern (its key) needs to be present. For example, if the algorithm is generating transaction number $k$ and the integer lists associated with patterns $x$ and $y$ contain $k$, then both $x$ and $y$ will be appended into transaction number $k$. The number of transactions in which each pattern will appear is determined by the pattern size, meaning that shorter patterns will appear in more often compared to bigger patterns. Furthermore, by definition, the patterns should be frequent, thus a minimum number of transactions in which each pattern will appear is guaranteed. Once the number of times each pattern should appear over all transactions is determined, the actual transactions in which each of them will appear are chosen randomly, meaning that a pattern may appear more than one time in a given transaction.
+\begin{algorithm}
+\caption{Choose transactions for patterns.}
+\label{generate_node}
+\begin{algorithmic}[1]
+\Function{GenerateIndexesDictionary}{TransactionTree[] $generated\_patterns$, Integer $max\_pattern\_nodes$, Integer $min\_pattern\_nodes$, Integer $total\_transactions$}
+\State $pattern\_transaction\_indexes \gets \{\}$
+\ForEach{$pattern \in generated\_patterns$}
+	\State $tree\_indexes \gets [\:]$
+	\State $k \gets total\_transactions - (|pattern| - min\_pattern\_nodes)$
+	\For{$i \gets 1 \text{ to } k$}
+	\EndFor
+\EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+\\
+Finally, the actual transactions are generated. For each transaction to be created a random number of $TransactionTree$ nodes are generated based on how many patterns each transaction will contain. These nodes are not part of any pattern and serve the only purpose to add random data to the transactions. Next, a root for each transaction is chosen
+
+
+
 \section{Implementation}
 The various steps and algorithms explained in Section~\ref{sec:generation} are implemented in a program, that takes as input the parameters listed in the previous section, and it produces a set of records organized in transactions, saving the generated data into a \texttt{csv} file. The latter has $n + 1$ rows, where the first line lists the names of the fields present inside each record, and the following $n$ lines contains the value of the fields, one record per line.
 
 The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices. The parameters are passed as arguments with flags and values when the program is started. The user can specify her own parameters, or use the default ones. It is also possible to set a flag to let the program print on the standard output which are the generated pattern. In this way is easy to test the correctness of the miner software that searches for these patterns.
 
 \section{Examples}
-
-\begin{table}
-\centering
-\caption{Frequency of Special Characters}
-\begin{tabular}{|c|c|l|} \hline
-Non-English or Math&Frequency&Comments\\ \hline
-\O & 1 in 1,000& For Swedish names\\ \hline
-$\pi$ & 1 in 5& Common in math\\ \hline
-\$ & 4 in 5 & Used in business\\ \hline
-$\Psi^2_1$ & 1 in 40,000& Unexplained usage\\
-\hline\end{tabular}
-\end{table}
 
 \begin{table*}
 \centering
