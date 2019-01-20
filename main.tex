@@ -131,7 +131,7 @@ The data generation process is parameterized, in order to let the user to use th
 \item the average length of patterns $l$, which is a floating point number;
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
 \item the number of values $m$ that each field can assume, which is an integer -- at least 1;
-\item a threshold $t$ that indicates at least how many times a pattern must appear to be considered a frequent pattern, this is also an integer.
+\item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent. The variable expresses this number with a percentage of $T$. For example having $T$ equal to 100 and $t$ equal to 0.2 means that in order for a pattern to be frequent it has to appear at least 20 times.
 \end{itemize} 
 The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details.
 
@@ -303,25 +303,30 @@ Starting from the PatternTree objects generated in the previous step, they are c
 \end{algorithmic}
 \end{algorithm}
 
-Next, a dictionary is created to determine in which transactions each pattern will appear. The dictionary uses the generated patterns as keys, and integer lists as values. The integer lists contain the indexes of the trees in which the pattern (its key) needs to be present. For example, if the algorithm is generating transaction number $k$ and the integer lists associated with patterns $x$ and $y$ contain $k$, then both $x$ and $y$ will be appended into transaction number $k$. The number of transactions in which each pattern will appear is determined by the pattern size, meaning that shorter patterns will appear in more often compared to bigger patterns. Furthermore, by definition, the patterns should be frequent, thus a minimum number of transactions in which each pattern will appear is guaranteed. Once the number of times each pattern should appear over all transactions is determined, the actual transactions in which each of them will appear are chosen randomly, meaning that a pattern may appear more than one time in a given transaction.
+The list of transformed pattern nodes will be referred as $TPatterns$ (Transformed patterns).
+\\\\
+Next, a dictionary is created to determine in which transactions each pattern in $TPatterns$ will appear. The dictionary uses the elements of $TPatterns$ as keys, and integer lists as values. The integer lists contain the indexes of the transactions in which the pattern (its key) needs to be present. For example, if the algorithm is generating transaction number $k$ and the integer lists associated with patterns $P1$ and $P2$ contain $k$, then both $P1$ and $P2$ will be appended into transaction $k$. The number of transactions in which each pattern will appear is determined by the pattern size, meaning that shorter patterns will appear in more often compared to bigger patterns. Furthermore, by definition, the patterns should be frequent, thus a minimum number of transactions in which each pattern will appear is guaranteed. The minimum frequency is determined by paramater $t$. Once the number of times each pattern should appear over all transactions is determined, the actual transactions in which each of them will appear are chosen randomly, meaning that a pattern may appear more than one time in a given transaction. Algorithm~\ref{generate_indexes} shows the exact procedure and formulas used to generate the pattern appearance dictionary. Line 5 shows the formula used to compute the number of time a given pattern should appear among all transactions where $min\_nodes$ stands for the number of nodes in the smallest pattern, $max\_nodes$ stands for the number of nodes in the biggest pattern. Both of these values are computed by searching for the biggest and the smallest pattern in $TPatterns$.
 \begin{algorithm}
-\caption{Choose transactions for patterns.}
-\label{generate_node}
+\caption{Generate transaction indexes for all patterns.}
+\label{generate_indexes}
 \begin{algorithmic}[1]
-\Function{GenerateIndexesDictionary}{TransactionTree[] $generated\_patterns$, Integer $max\_pattern\_nodes$, Integer $min\_pattern\_nodes$, Integer $total\_transactions$}
-\State $pattern\_transaction\_indexes \gets \{\}$
-\ForEach{$pattern \in generated\_patterns$}
-	\State $tree\_indexes \gets [\:]$
-	\State $k \gets total\_transactions - (|pattern| - min\_pattern\_nodes)$
-	\For{$i \gets 1 \text{ to } k$}
+\Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $max\_nodes$, Integer $min\_nodes$, Integer $T$, float $t$}
+\State $transaction\_indexes \gets \{\}$
+\ForEach{$pattern \in TPatterns$}
+	\State $indexes \gets [\:]$
+	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T \times (1 - t)) / (max\_pattern\_nodes - min\_pattern\_nodes)$
+	\For{$i \gets 0 \text{ to } k - 1$}
+	\State $indexes[i] \gets RandomInt(0, T - 1)$
 	\EndFor
+	\State $transaction\_indexes[pattern] \gets tree\_indexes$
 \EndFor
+\Return $transaction\_indexes$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
 \\
-Finally, the actual transactions are generated. For each transaction to be created a random number of $TransactionTree$ nodes are generated based on how many patterns each transaction will contain. These nodes are not part of any pattern and serve the only purpose to add random data to the transactions. Next, a root for each transaction is chosen
-
+Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contain the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$. Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen_pattern$ list as these nodes serve the only purpose of adding random nodes to the transactions.
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a root for the transaction is chosen randomly from this list. Furthermore, another list called $current\_tree$ is created and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
 
 
 \section{Implementation}
