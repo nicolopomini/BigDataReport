@@ -131,7 +131,7 @@ The data generation process is parameterized, in order to let the user to use th
 \item the average length of patterns $l$, which is a floating point number;
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
 \item the number of values $m$ that each field can assume, which is an integer -- at least 1;
-\item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent. The variable expresses this number with a percentage of $T$. For example having $T$ equal to 100 and $t$ equal to 0.2 means that in order for a pattern to be frequent it has to appear at least 20 times.
+\item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent.
 \end{itemize} 
 The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details.
 
@@ -310,11 +310,11 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \caption{Generate transaction indexes for all patterns.}
 \label{generate_indexes}
 \begin{algorithmic}[1]
-\Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $max\_nodes$, Integer $min\_nodes$, Integer $T$, float $t$}
+\Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $max\_nodes$, Integer $min\_nodes$, Integer $T$, Integer $t$}
 \State $transaction\_indexes \gets \{\}$
 \ForEach{$pattern \in TPatterns$}
 	\State $indexes \gets [\:]$
-	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T \times (1 - t)) / (max\_pattern\_nodes - min\_pattern\_nodes)$
+	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T - t) / (max(1, max\_pattern\_nodes - min\_pattern\_nodes))$
 	\For{$i \gets 0 \text{ to } k - 1$}
 	\State $indexes[i] \gets RandomInt(0, T - 1)$
 	\EndFor
@@ -325,9 +325,34 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \end{algorithmic}
 \end{algorithm}
 \\
-Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contain the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$. Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list, as these nodes serve the only purpose of adding random nodes to the transactions.
-Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$, and a root for the transaction is chosen randomly from this list. Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
-
+Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contain the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$.
+Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list, as these nodes serve the only purpose of adding random nodes to the transactions.
+\begin{algorithm}
+\caption{Generate the transactions}
+\label{generate_indexes}
+\begin{algorithmic}[1]
+\Function{GenerateTransactions}{TransactionTree[] $TPatterns$, Dict(TransactionTree, Integer) $transaction\_indexes$, Integer $T$}
+\For{$t\_index \gets 0 \text{ to } T - 1$}
+    \State $chosen\_patterns \gets []$
+    \State $chosen\_pattern\_index \gets 0$
+    \ForEach{$pattern \in TPatterns$}
+        \For{$i \gets 0 \text{ to } |transaction\_indexes[pattern]| - 1$}
+            \If{$transaction\_indexes[pattern][i] == index$}
+                \State $chosen\_patterns[chosen\_pattern\_index] \gets pattern$
+                \State $chosen\_pattern\_index++$
+            \EndIf
+        \EndFor
+    \EndFor
+    \ForEach{$pattern \in chosen\_patterns$}
+    
+    \EndFor
+\EndFor
+\Return $transaction\_indexes$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
+Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array.
 
 \section{Implementation}
 The various steps and algorithms explained in Section~\ref{sec:generation} are implemented in a program, that takes as input the parameters listed in the previous section, and it produces a set of records organized in transactions, saving the generated data into a \texttt{csv} file. The latter has $n + 1$ rows, where the first line lists the names of the fields present inside each record, and the following $n$ lines contains the value of the fields, one record per line.
@@ -416,15 +441,7 @@ which contradicts our assumption that $l\neq 0$.
 \end{proof}
 
 \section{Conclusions}
-This paragraph will end the body of this sample document.
-Remember that you might still have Acknowledgments or
-Appendices; brief samples of these
-follow.  There is still the Bibliography to deal with; and
-we will make a disclaimer about that here: with the exception
-of the reference to the \LaTeX\ book, the citations in
-this paper are to articles which have nothing to
-do with the present subject and are used as
-examples only.
+In this pages were described the methods used, the algorithms and the results obtained during the implementation of a parameterized generator for frequent item sets in tree-like sequences of complex objects. Python was used to implement a generator which adjusts the objects generation based on parameters such as pattern average length to vary the size of the patterns, pattern number to vary the number of patterns which can appear and pattern frequency to vary the minimum frequency that a pattern must have. Ultimately it was demonstrated how this generator could be useful for big data as it is scalable......
 %\end{document}  % This is where a 'short' article might terminate
 %
 % The following two commands are all you need in the
