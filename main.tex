@@ -316,7 +316,7 @@ Next, a dictionary is created to determine in which transactions each pattern in
 	\State $indexes \gets [\:]$
 	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T - t) / (max(1, max\_pattern\_nodes - min\_pattern\_nodes))$
 	\For{$i \gets 0 \text{ to } k - 1$}
-	\State $indexes[i] \gets RandomInt(0, T - 1)$
+	\State $indexes[i] \gets random.int(0, T - 1)$
 	\EndFor
 	\State $transaction\_indexes[pattern] \gets tree\_indexes$
 \EndFor
@@ -325,34 +325,125 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \end{algorithmic}
 \end{algorithm}
 \\
-Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contain the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$.
-Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list, as these nodes serve the only purpose of adding random nodes to the transactions.
+Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contains the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$ and the above described process can be seen in Algorithm \ref{pick_patterns}.
+
 \begin{algorithm}
-\caption{Generate the transactions}
-\label{generate_indexes}
+\caption{Pick the patterns for the current transaction being generated}
+\label{pick_patterns}
 \begin{algorithmic}[1]
-\Function{GenerateTransactions}{TransactionTree[] $TPatterns$, Dict(TransactionTree, Integer) $transaction\_indexes$, Integer $T$}
-\For{$t\_index \gets 0 \text{ to } T - 1$}
-    \State $chosen\_patterns \gets []$
-    \State $chosen\_pattern\_index \gets 0$
-    \ForEach{$pattern \in TPatterns$}
-        \For{$i \gets 0 \text{ to } |transaction\_indexes[pattern]| - 1$}
-            \If{$transaction\_indexes[pattern][i] == index$}
-                \State $chosen\_patterns[chosen\_pattern\_index] \gets pattern$
-                \State $chosen\_pattern\_index++$
-            \EndIf
-        \EndFor
-    \EndFor
-    \ForEach{$pattern \in chosen\_patterns$}
-    
+\Function{PickPattern}{TransactionTree[] $TPatterns$, Dict(TransactionTree, Integer) $transaction\_indexes$, Integer $current\_transaction\_index$}
+\State $chosen\_patterns \gets []$
+\State $chosen\_pattern\_index \gets 0$
+\ForEach{$pattern \in TPatterns$}
+    \For{$i \gets 0 \text{ to } |transaction\_indexes[pattern]| - 1$}
+        \If{$transaction\_indexes[pattern][i] == current\_transaction\_index$}
+            \State $chosen\_patterns[chosen\_pattern\_index++] \gets pattern$
+        \EndIf
     \EndFor
 \EndFor
-\Return $transaction\_indexes$
+\Return $chosen\_patterns$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
-Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array.
+
+Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list and on the $l$ parameter. These nodes serve the only purpose of adding random nodes to the transactions. The fields and values for these nodes are picked at random from the previously generated $\boldsymbol{a}$ vector and $\boldsymbol{M}$ matrix. This process is described in Algorithm \ref{generate_random_nodes}.
+
+\begin{algorithm}
+\caption{Generate the random nodes to be appended to the current transaction being generated}
+\label{generate_random_nodes}
+\begin{algorithmic}[1]
+\Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, String[] $a$, String[][] $M$}
+\State $random\_nodes \gets []$
+\For{$i \gets 0 \text{ to } 1 + l + l \times |chose\_patterns|$}
+    \State $rid \gets random.string()$
+    \State $fields\_for\_record \gets \{"rid": rid, "parent": None\}$
+    \For{$j \gets 0 \text{ to } |a| - 1$}
+        \State $field\_value \gets M[j][random.int(0, |M[j]| - 1)]$
+        \State $fields\_for\_record[a[j]] \gets field\_value$
+    \EndFor
+    \State $random\_nodes[i] \gets TransactionTree()$
+    \State $random\_nodes_{fields} \gets fields\_for\_record$
+\EndFor
+\Return $random\_nodes$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
+
+\begin{algorithm}
+\caption{Merging of the two lists and assignment of the tid}
+\label{merging_lists}
+\begin{algorithmic}[1]
+\Function{MergeLists}{TransactionTree[] $chosen\_patterns$, TransactionTree[] $random\_nodes$}
+\State $transaction\_id = random.string()$
+\State $complete\_nodes\_list \gets []$
+\For{$i \gets 0 \text{ to } |chosen\_patterns| - 1$}
+    \State $chosen\_patterns[i]_{fields}["tid"] \gets transaction\_id$
+    \State $complete\_nodes\_list[i] \gets chosen\_patterns[i]$
+\EndFor
+\State $k \gets |chosen\_patterns|$
+\For{$i \gets k \text{ to } k + |random\_nodes| - 1$}
+    \State $random\_nodes[i - k]_{fields}["tid"] \gets transaction\_id$
+    \State $complete\_nodes\_list[i] \gets random\_nodes[i - k]$
+\EndFor
+\Return $complete\_nodes\_list$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
+Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. The whole transaction generation process can be seen in Algorithm \ref{complete_transaction_generation}.
+
+\begin{algorithm}
+\caption{Generation of single transaction}
+\label{transaction_generation}
+\begin{algorithmic}[1]
+\Function{SingleTransactionGeneration}{TransactionTree[] $complete\_nodes\_list$, TransactionTree[] $chosen\_patterns$}
+\State $transaction\_root \gets complete\_nodes\_list[random.int(0, |complete\_nodes\_list| - 1)]$
+\State $current\_tree \gets [transaction\_root]$
+\State $current\_tree\_index \gets 1$
+\If{$transaction\_root \in chosen\_patterns$}
+    \ForEach{$node \in transaction\_root.getNodes()$}
+        \State $current\_tree[current\_tree\_index++] \gets node$
+    \EndFor
+\EndIf
+\State $complete\_nodes\_list.remove(transaction\_root)$
+\For{$i \gets 0 \text{ to } |complete\_nodes\_list| - 1$}
+    \State $node\_to\_append \gets complete\_nodes\_list[random.int(0, |complete\_nodes\_list| - 1)]$
+    \State $chosen\_parent \gets current\_tree[random.int(0, |current\_tree| - 1)]$
+    \State $chosen\_parent.addChild(node\_to\_append)$
+    \State $current\_tree[current\_tree\_index++] \gets node\_to\_append$
+    \If{$node\_to\_append \in chosen\_patterns$}
+        \ForEach{$node \in node\_to\_append.getNodes()$}
+            \State $current\_tree[current\_tree\_index++] \gets node$
+        \EndFor
+    \EndIf
+    \State $complete\_nodes\_list.remove(node\_to\_append)$
+\EndFor
+\Return $transaction\_root$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Generation of all transactions}
+\label{complete_transaction_generation}
+\begin{algorithmic}[1]
+\Function{TransactionGeneration}{TransactionTree[] $TPatterns$, Integer $T$, float $l$, String[] $a$, String[][] $M$, Dict(TransactionTree, Integer) $transaction\_indexes$}
+\State $root\_list \gets []$
+\State $root\_list\_index \gets 0$
+\For{$index \gets 0 \text{ to } T - 1$}
+    \State $chosen\_patterns \gets \text{PickPattern(TPatterns, transaction\_indexes, index)}$
+    \State $random\_nodes \gets \text{GenerateRandomNodes(chosen\_patterns, l, a, M)}$
+    \State $complete\_nodes\_list \gets \text{MergeLists(chosen\_patterns, random\_nodes)}$
+    \State $transaction\_root \gets \text{SingleTransactionGeneration(complete\_nodes\_list, chosen\_patterns)}$
+    \State $root\_list[root\_list\_index++] \gets transaction\_root$
+\EndFor
+\Return $root\_list$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \section{Implementation}
 The various steps and algorithms explained in Section~\ref{sec:generation} are implemented in a program, that takes as input the parameters listed in the previous section, and it produces a set of records organized in transactions, saving the generated data into a \texttt{csv} file. The latter has $n + 1$ rows, where the first line lists the names of the fields present inside each record, and the following $n$ lines contains the value of the fields, one record per line.
