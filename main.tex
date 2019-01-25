@@ -316,7 +316,7 @@ Next, a dictionary is created to determine in which transactions each pattern in
 	\State $indexes \gets [\:]$
 	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T - t) / (max(1, max\_pattern\_nodes - min\_pattern\_nodes))$
 	\For{$i \gets 0 \text{ to } k - 1$}
-	\State $indexes[i] \gets random.int(0, T - 1)$
+	\State $indexes[i] \gets random\_int(0, T - 1)$
 	\EndFor
 	\State $transaction\_indexes[pattern] \gets tree\_indexes$
 \EndFor
@@ -330,7 +330,8 @@ To better understand how this formula allows to determine the number of indexes 
 \\\\
 To sum it up, the formula makes so that the smallest patterns appear as many times as there are transactions, the biggest patterns appear just enough times to be frequent, and all the patterns in between appear in intermediate number of times between these two values.
 \\\\
-Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contains the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$ and the above described process can be seen in Algorithm \ref{pick_patterns}.
+Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created, and all the patterns which contains the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$ and the above described process can be seen in Algorithm \ref{pick_patterns}.
+
 
 \begin{algorithm}
 \caption{Pick the patterns for the current transaction being generated}
@@ -341,8 +342,9 @@ Finally, the actual transactions are generated and this sequence of steps is rep
 \State $chosen\_pattern\_index \gets 0$
 \ForEach{$pattern \in TPatterns$}
     \For{$i \gets 0 \text{ to } |transaction\_indexes[pattern]| - 1$}
-        \If{$transaction\_indexes[pattern][i] == current\_transaction\_index$}
-            \State $chosen\_patterns[chosen\_pattern\_index++] \gets pattern$
+        \If{$transaction\_indexes[pattern][i] = current\_transaction\_index$}
+            \State $chosen\_patterns[chosen\_pattern\_index] \gets pattern$
+            \State $chosen\_pattern\_index \gets chosen\_pattern\_index + 1$
         \EndIf
     \EndFor
 \EndFor
@@ -360,10 +362,10 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, String[] $a$, String[][] $M$}
 \State $random\_nodes \gets []$
 \For{$i \gets 0 \text{ to } 1 + l + l \times |chose\_patterns|$}
-    \State $rid \gets random.string()$
+    \State $rid \gets \text{ \texttt{random\_string() }}$
     \State $fields\_for\_record \gets \{"rid": rid, "parent": None\}$
     \For{$j \gets 0 \text{ to } |a| - 1$}
-        \State $field\_value \gets M[j][random.int(0, |M[j]| - 1)]$
+        \State $field\_value \gets M[j][random\_int(0, |M[j]| - 1)]$
         \State $fields\_for\_record[a[j]] \gets field\_value$
     \EndFor
     \State $random\_nodes[i] \gets TransactionTree()$
@@ -374,14 +376,14 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \end{algorithmic}
 \end{algorithm}
 
-Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$, and an unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
 
 \begin{algorithm}
 \caption{Merging of the two lists and assignment of the tid}
 \label{merging_lists}
 \begin{algorithmic}[1]
 \Function{MergeLists}{TransactionTree[] $chosen\_patterns$, TransactionTree[] $random\_nodes$}
-\State $transaction\_id = random.string()$
+\State $transaction\_id = \text{ \texttt{random\_string() }}$
 \State $complete\_nodes\_list \gets []$
 \For{$i \gets 0 \text{ to } |chosen\_patterns| - 1$}
     \State $chosen\_patterns[i]_{fields}["tid"] \gets transaction\_id$
@@ -398,6 +400,7 @@ Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are me
 \end{algorithm}
 
 Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
+
 Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. To sum it up, for each transaction to be generated function PickPattern (Algorithm \ref{pick_patterns}) is called to select the patterns that should appear in the transaction. Next, a number of random nodes to be appended to the transaction is generated using the GenerateRandomeNodes function (Algorithm \ref{generate_random_nodes}). Next, using the function MergeLists (Algorithm \ref{merging_lists}), the chosen patterns and the randomly generated nodes are merged into one list and a transaction id is assigned to all the nodes in this list. Finally, the function SingleTransactionGeneration (Algorithm \ref{transaction_generation}) is called to randomly append all the nodes in order to generate the transaction. This whole process is shown in Algorithm \ref{complete_transaction_generation}.
 
 \begin{algorithm}
@@ -405,23 +408,26 @@ Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the alg
 \label{transaction_generation}
 \begin{algorithmic}[1]
 \Function{SingleTransactionGeneration}{TransactionTree[] $complete\_nodes\_list$, TransactionTree[] $chosen\_patterns$}
-\State $transaction\_root \gets complete\_nodes\_list[random.int(0, |complete\_nodes\_list| - 1)]$
+\State $transaction\_root \gets complete\_nodes\_list[random\_int(0, |complete\_nodes\_list| - 1)]$
 \State $current\_tree \gets [transaction\_root]$
 \State $current\_tree\_index \gets 1$
 \If{$transaction\_root \in chosen\_patterns$}
     \ForEach{$node \in transaction\_root.getNodes()$}
-        \State $current\_tree[current\_tree\_index++] \gets node$
+        \State $current\_tree[current\_tree\_index] \gets node$
+        \State $current\_tree\_index \gets current\_tree\_index + 1$
     \EndFor
 \EndIf
 \State $complete\_nodes\_list.remove(transaction\_root)$
 \For{$i \gets 0 \text{ to } |complete\_nodes\_list| - 1$}
-    \State $node\_to\_append \gets complete\_nodes\_list[random.int(0, |complete\_nodes\_list| - 1)]$
+    \State $node\_to\_append \gets complete\_nodes\_list[random\_int(0, |complete\_nodes\_list| - 1)]$
     \State $chosen\_parent \gets current\_tree[random.int(0, |current\_tree| - 1)]$
     \State $chosen\_parent.addChild(node\_to\_append)$
-    \State $current\_tree[current\_tree\_index++] \gets node\_to\_append$
+    \State $current\_tree[current\_tree\_index] \gets node\_to\_append$
+    \State $current\_tree\_index \gets current\_tree\_index + 1$
     \If{$node\_to\_append \in chosen\_patterns$}
         \ForEach{$node \in node\_to\_append.getNodes()$}
-            \State $current\_tree[current\_tree\_index++] \gets node$
+            \State $current\_tree[current\_tree\_index] \gets node$
+            \State $urrent\_tree\_index \gets urrent\_tree\_index + 1$
         \EndFor
     \EndIf
     \State $complete\_nodes\_list.remove(node\_to\_append)$
@@ -443,7 +449,8 @@ Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the alg
     \State $random\_nodes \gets \text{GenerateRandomNodes(chosen\_patterns, l, a, M)}$
     \State $complete\_nodes\_list \gets \text{MergeLists(chosen\_patterns, random\_nodes)}$
     \State $transaction\_root \gets \text{SingleTransactionGeneration(complete\_nodes\_list, chosen\_patterns)}$
-    \State $root\_list[root\_list\_index++] \gets transaction\_root$
+    \State $root\_list[root\_list\_index] \gets transaction\_root$
+    \State $root\_list\_index \gets root\_list\_index + 1$
 \EndFor
 \Return $root\_list$
 \EndFunction
@@ -468,74 +475,6 @@ To use the software, is necessary to have a Python interpreter, at least at vers
 \item \texttt{-pp true}, to print on the standard output the generated patterns. Default is false;
 \end{itemize}
 
-\section{Examples}
-
-\begin{table*}
-\centering
-\caption{Some Typical Commands}
-\begin{tabular}{|c|c|l|} \hline
-Command&A Number&Comments\\ \hline
-\texttt{{\char'134}alignauthor} & 100& Author alignment\\ \hline
-\texttt{{\char'134}numberofauthors}& 200& Author enumeration\\ \hline
-\texttt{{\char'134}table}& 300 & For tables\\ \hline
-\texttt{{\char'134}table*}& 400& For wider tables\\ \hline\end{tabular}
-\end{table*}
-% end the environment with {table*}, NOTE not {table}!
-
-\subsection{Theorem-like Constructs}
-Other common constructs that may occur in your article are
-the forms for logical constructs like theorems, axioms,
-corollaries and proofs.  There are
-two forms, one produced by the
-command \texttt{{\char'134}newtheorem} and the
-other by the command \texttt{{\char'134}newdef}; perhaps
-the clearest and easiest way to distinguish them is
-to compare the two in the output of this sample document:
-
-This uses the \textbf{theorem} environment, created by
-the \texttt{{\char'134}newtheorem} command:
-\newtheorem{theorem}{Theorem}
-\begin{theorem}
-Let $f$ be continuous on $[a,b]$.  If $G$ is
-an antiderivative for $f$ on $[a,b]$, then
-\begin{displaymath}\int^b_af(t)dt = G(b) - G(a).\end{displaymath}
-\end{theorem}
-
-The other uses the \textbf{definition} environment, created
-by the \texttt{{\char'134}newdef} command:
-
-\begin{definition}
-If $z$ is irrational, then by $e^z$ we mean the
-unique number which has
-logarithm $z$: \begin{displaymath}{\log e^z = z}\end{displaymath}
-\end{definition}
-
-Two lists of constructs that use one of these
-forms is given in the
-\textit{Author's  Guidelines}.
-
-There is one other similar construct environment, which is
-already set up
-for you; i.e. you must \textit{not} use
-a \texttt{{\char'134}newdef} command to
-create it: the \textbf{proof} environment.  Here
-is a example of its use:
-\begin{proof}
-Suppose on the contrary there exists a real number $L$ such that
-\begin{displaymath}
-\lim_{x\rightarrow\infty} \frac{f(x)}{g(x)} = L.
-\end{displaymath}
-Then
-\begin{displaymath}
-l=\lim_{x\rightarrow c} f(x)
-= \lim_{x\rightarrow c}
-\left[ g{x} \cdot \frac{f(x)}{g(x)} \right ]
-= \lim_{x\rightarrow c} g(x) \cdot \lim_{x\rightarrow c}
-\frac{f(x)}{g(x)} = 0\cdot L = 0,
-\end{displaymath}
-which contradicts our assumption that $l\neq 0$.
-\end{proof}
-
 \section{Conclusions}
 In this pages were described the methods used, the algorithms and the results obtained during the implementation of a parameterized generator for frequent item sets in tree-like sequences of complex objects. Python was used to implement a generator which adjusts the objects generation based on parameters such as pattern average length to vary the size of the patterns, pattern number to vary the number of patterns which can appear and pattern frequency to vary the minimum frequency that a pattern must have. Ultimately it was demonstrated how this generator could be useful for big data as it is scalable......
 %\end{document}  % This is where a 'short' article might terminate
@@ -554,51 +493,4 @@ In this pages were described the methods used, the algorithms and the results ob
 %
 %APPENDICES are optional
 %\balancecolumns
-\appendix
-%Appendix A
-\section{Headings in Appendices}
-The rules about hierarchical headings discussed above for
-the body of the article are different in the appendices.
-In the \textbf{appendix} environment, the command
-\textbf{section} is used to
-indicate the start of each Appendix, with alphabetic order
-designation (i.e. the first is A, the second B, etc.) and
-a title (if you include one).  So, if you need
-hierarchical structure
-\textit{within} an Appendix, start with \textbf{subsection} as the
-highest level. Here is an outline of the body of this
-document in Appendix-appropriate form:
-\subsection{Introduction}
-\subsection{The Body of the Paper}
-\subsubsection{Type Changes and  Special Characters}
-\subsubsection{Math Equations}
-\paragraph{Inline (In-text) Equations}
-\paragraph{Display Equations}
-\subsubsection{Citations}
-\subsubsection{Tables}
-\subsubsection{Figures}
-\subsubsection{Theorem-like Constructs}
-\subsubsection*{A Caveat for the \TeX\ Expert}
-\subsection{Conclusions}
-\subsection{Acknowledgments}
-\subsection{Additional Authors}
-This section is inserted by \LaTeX; you do not insert it.
-You just add the names and information in the
-\texttt{{\char'134}additionalauthors} command at the start
-of the document.
-\subsection{References}
-Generated by bibtex from your ~.bib file.  Run latex,
-then bibtex, then latex twice (to resolve references)
-to create the ~.bbl file.  Insert that ~.bbl file into
-the .tex source file and comment out
-the command \texttt{{\char'134}thebibliography}.
-% This next section command marks the start of
-% Appendix B, and does not continue the present hierarchy
-\section{More Help for the Hardy}
-The acm\_proc\_article-sp document class file itself is chock-full of succinct
-and helpful comments.  If you consider yourself a moderately
-experienced to expert user of \LaTeX, you may find reading
-it useful but please remember not to change it.
-
-% That's all folks!
 \end{document}
