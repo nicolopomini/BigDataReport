@@ -325,7 +325,7 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \end{algorithmic}
 \end{algorithm}
 \\
-Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created and all the patterns which contains the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$ and the above described process can be seen in Algorithm \ref{pick_patterns}.
+Finally, the actual transactions are generated and this sequence of steps is repeated for each transaction: Firstly, a pattern list is created, and all the patterns which contains the transaction index in their index list generated with Algorithm~\ref{generate_indexes} are appended to it. This list will be named $chosen\_patterns$ and the above described process can be seen in Algorithm \ref{pick_patterns}.
 
 \begin{algorithm}
 \caption{Pick the patterns for the current transaction being generated}
@@ -370,7 +370,7 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \end{algorithmic}
 \end{algorithm}
 
-Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$ and a unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$, and an unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
 
 \begin{algorithm}
 \caption{Merging of the two lists and assignment of the tid}
@@ -394,7 +394,7 @@ Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are me
 \end{algorithm}
 
 Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
-Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. The whole transaction generation process can be seen in Algorithm \ref{complete_transaction_generation}.
+Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_to\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. The whole transaction generation process can be seen in Algorithm \ref{complete_transaction_generation}.
 
 \begin{algorithm}
 \caption{Generation of single transaction}
