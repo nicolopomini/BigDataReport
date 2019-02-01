@@ -81,7 +81,7 @@ One possible field of data mining is the frequent itemset mining. In many scenar
 
 This report is about the project for the \emph{Big Data and Social networks} course offered by the department of information engineering and computer science\footnote{\url{www.disi.unitn.it}} of the university of Trento. The project is related to the \emph{data mining} course, offered by the same department, and in particular to the course project of the latter. In fact, the purpose of the \emph{big data} project is to build a data generator for the \emph{data mining} project.
 
-The report is organized as follows: in Chapter 2, the problem statement is formalized, \dots.
+The report is organized as follows: in Chapter~2, the problem statement is formalized; in Chapter~3, some assumptions are stated, in Chapter~4 the data generation process is explained in its entirety, the Chapter~5 is about the implementation of the data generator, and finally, in Chapter~6, some details about the evaluation of the software are given.
 
 \section{Problem statement}
 The goal of this project is to create a data generator for the \emph{data mining} project. To better understand which are the constraints to consider, let us formalize the \emph{data mining} problem.
@@ -126,7 +126,9 @@ All the records contain at least four attributes: the \texttt{rid} to identify t
 A \emph{generic attribute} is any attribute of a record which is not the \texttt{rid}, the \texttt{tid} or the \texttt{parent} attributes. These attributes represent the features of each record, and the patterns are made of \emph{generic attributes}.
 \end{definition}
 
-All the records are assumed to have the same attributes -- some of them may be empty. Each record has discrete values, belonging to finite sets of possible values. This assumption is needed to make the data mining project easier. From the point of view of the data generation, the absence of this constraint would not complicate anything.
+All the records are assumed to have the same attributes -- some of them may be empty, to make the organization of the data easier. This contraint does not cause any loss of generality: in fact, in case the records are desired to be composed by a different number (and type) of attributes, it is sufficient to provide to each record all the attributes, living some of them empty. 
+
+Furthermore, the output is assumed to be organized in a matrix $M \in \Sigma^{n * d}$, where $\Sigma$ is the dictionary from which the values of the attributes belong to -- it can be a finite subset of $\mathbb{N}$, or a set of strings -- $n$ is the number of records, and $d$ the number of attributes per record.
 
 \section{Data generation}
 \label{sec:generation}
@@ -136,7 +138,6 @@ The data generation process is parameterized, in order to let the user to use th
 \item the number of patterns $P$ to generate, which are distributed among the transactions -- this is also an integer number;
 \item the average length of patterns $l$, which is a floating point number;
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
-\item the number of values $m$ that each field can assume, which is an integer -- at least 1;
 \item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent.
 \end{itemize} 
 The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details.
@@ -144,7 +145,7 @@ The data generation process is structured as follows: firstly, \emph{generic att
 \subsection{Attribute generation}
 The very first part of the data generation process is about the attributes of the records. According to the assumptions made in Section~\ref{sec:assumptions}, each record has three attributes whose role is to uniquely identify a record -- the \texttt{rid} -- and to structure and relate records among them -- the \texttt{tid} to understand which transaction each record belongs to, and the \texttt{parent} to define the record hierarchy. In addition to these three, there is a certain number of \emph{generic attributes} that characterize each record.
 
-All the possible \emph{generic attributes} are generated. Without loss of generality, they all are generated as strings -- since every object can be represented by a string and built from a string. In particular, $n - 3$ strings are generated, which represent the names of the attributes -- which can be also seen the keys or the field names. Then, for each attribute, a list with $m$ possible values is generated. In other words, a vector $\boldsymbol{a}$ -- of $n$ elements -- and a matrix $\boldsymbol{M}$ -- with $n$ rows and $m$ columns -- are created. The vector $\boldsymbol{a}$ contains all the attribute names, and an entry $[i, j]$ of $\boldsymbol{M}$ is the string $j$ that the attribute $i$ can assume.
+All the possible \emph{generic attributes} are generated. Without loss of generality, they all are generated as strings -- since every object can be represented by a string and built from a string. In particular, $n - 3$ strings are generated, which represent the names of the attributes -- which can be also seen the keys or the field names. In other words, a vector $\boldsymbol{a}$ -- of $n$ elements is created. It contains all the attribute names.
 
 To do so, let us assume the existence of a function that generates a random string, every time unique:
 \begin{verbatim}
@@ -152,7 +153,7 @@ string random_string()
 \end{verbatim}
 which is used to generate the \emph{generic attributes}.
 
-With the Algorithm~\ref{generate_attributes} and Algorithm~\ref{generate_values}, $\boldsymbol{a}$ and $\boldsymbol{M}$ are generated.
+With the Algorithm~\ref{generate_attributes}, $\boldsymbol{a}$ is generated.
 \begin{algorithm}
 \caption{Generate the attribute names and return a vector $\boldsymbol{a}$ that contains them.}
 \label{generate_attributes}
@@ -163,22 +164,6 @@ With the Algorithm~\ref{generate_attributes} and Algorithm~\ref{generate_values}
 	\State $\boldsymbol{a}_i \gets \text{ \texttt{random\_string() }} $ 
 \EndFor
 \Return $\boldsymbol{a}$
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-
-\begin{algorithm}
-\caption{Generate the attribute values and return a matrix $\boldsymbol{M}$ that contains them.}
-\label{generate_values}
-\begin{algorithmic}[1]
-\Function{generateAttributeValues}{Integer $n$, Integer $m$}
-\State $\boldsymbol{M} \gets new Integer[n][m]$
-\For{$i \gets 1 \text{ to } n$}
-	\For{$j \gets 1 \text{ to } m$}
-		\State $\boldsymbol{M}[i, j] \gets \text{ \texttt{random\_string() }} $ 
-	\EndFor
-\EndFor
-\Return $\boldsymbol{M}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -202,7 +187,7 @@ As can be seen in Table~\ref{tab:patterntree}, the object is a generic tree with
 
 The generation of the patterns relies on four of the parameters listed at the beginning of Section~\ref{sec:generation}: the number of patterns to be generated $P$, the average length of a pattern $l$, the number of global fields $n$ and the number of values for each field $m$.
 
-Let $Pl$ be the length of a pattern, which represents the number of edged it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decider using a Poisson random variable with mean $l$. This type of variable is chosen because it models events occurring successively and independently in a given time frame, and this scenario fits perfectly because the structure -- and the length -- of a single pattern is independent from the others. Furthermore, pubblications like \cite{agrawal1994fast} and \cite{ivancsy2006time} use the same approach during the pattern generation. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is chosen from $\boldsymbol{M}$. All the nodes are saved into a set, called \emph{generated}.
+Let $Pl$ be the length of a pattern, which represents the number of edged it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decider using a Poisson random variable with mean $l$. This type of variable is chosen because it models events occurring successively and independently in a given time frame, and this scenario fits perfectly because the structure -- and the length -- of a single pattern is independent from the others. Furthermore, pubblications like \cite{agrawal1994fast} and \cite{ivancsy2006time} use the same approach during the pattern generation. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is randomly created with the function \texttt{random\_string()}. All the nodes are saved into a set, called \emph{generated}.
 
 Once $1 + Pl$ nodes are generated, another set is created, called \emph{included}. The latter represents the nodes exctacted from \emph{generated} to whom a parent node have been assigned. At the beginnig, this set is empty. Randomly, one node from \emph{generated} is taken and moved into \emph{included}, assigning to it a \texttt{null} parent ($\bot$ symbol): this is the root node of the pattern. 
 
@@ -214,13 +199,12 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \caption{Generate a node.}
 \label{generate_node}
 \begin{algorithmic}[1]
-\Function{generateNode}{Integer $n$, float $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\Function{generateNode}{Integer $n$, String[] $\boldsymbol{a}$}
 \State $fields \gets \{\}$
-\For{$i \gets 1 \text{ to } k$}
+\For{$i \gets 1 \text{ to } n$}
 	\State $k \gets x : x \in [1, n]$
-	\State $j \gets x : x \in [1, m]$
 	\State $field\_name \gets \boldsymbol{a}_k$
-	\State $field\_value \gets \boldsymbol{M}[k, j]$
+	\State $field\_value \gets \text{\texttt{random\_string()}}$
 	\State $fields[field\_name] \gets field\_value$
 \EndFor
 \State $node \gets PatternTree()$
@@ -234,13 +218,13 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \caption{Generate the patterns.}
 \label{generate_patterns}
 \begin{algorithmic}[1]
-\Function{generatePatterns}{Integer $P$, float $l$, Integer $n$, Integer $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\Function{generatePatterns}{Integer $P$, float $l$, Integer $n$, String[] $\boldsymbol{a}$}
 \State $patterns \gets \{\}$
 \For{$i \gets 1 \text{ to } P$}
 	\State $Pl \gets Poisson(l)$
 	\State $generated \gets \{\}$
 	\For{$j \gets 1 \text{ to } 1 + Pl$}
-		\State $node \gets generate\_node(n, m, \boldsymbol{a}, \boldsymbol{M}) $ 
+		\State $node \gets generate\_node(n, \boldsymbol{a}) $ 
 		\State $generated \gets generated \cup \{node\}$
 	\EndFor
 	\State $included \gets \{\}$
@@ -287,18 +271,17 @@ Starting from the PatternTree objects generated in the previous step, they are c
 \caption{Transform a PatternTree into a TransactionTree.}
 \label{translate_patterns}
 \begin{algorithmic}[1]
-\Function{translatePatterns}{PatternTree $t$, PatternTree $p$, Integer $n$, Integer $m$, String[] $\boldsymbol{a}$, String[][] $\boldsymbol{M}$}
+\Function{translatePatterns}{PatternTree $t$, PatternTree $p$, Integer $n$, String[] $\boldsymbol{a}$}
 \State $rid \gets \text{ \texttt{random\_string() }}$
 \State $fields \gets t_{fields}$
 \For{$i \gets 1 \text{ to } n$}
 	\If{$\boldsymbol{a}_i \notin fields$}
-		\State $j \gets x : x \in [1, m]$
-		\State $fields[\boldsymbol{a}_i] \gets \boldsymbol{M}[i,j]$
+		\State $fields[\boldsymbol{a}_i] \gets \text{\texttt{random\_string()}}$
 	\EndIf
 \EndFor
 \State $children \gets \{\}$
 \For{$child \in t_{children}$}
-	\State $children \gets children \cup \{translatePatterns(child, t, n, m, \boldsymbol{a}, \boldsymbol{M}\}$
+	\State $children \gets children \cup \{translatePatterns(child, t, n, \boldsymbol{a}\}$
 \EndFor
 \State $node \gets TransactionTree()$
 \State $node_{rid} \gets rid$
@@ -358,20 +341,20 @@ Finally, the actual transactions are generated and this sequence of steps is rep
 \end{algorithmic}
 \end{algorithm}
 
-Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list and on the $l$ parameter. These nodes serve the only purpose of adding random nodes to the transactions. The fields and values for these nodes are picked at random from the previously generated $\boldsymbol{a}$ vector and $\boldsymbol{M}$ matrix. This process is described in Algorithm \ref{generate_random_nodes}.
+Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly generated attributes, plus a unique \texttt{rid} field. The number of generated nodes depends on the size of $chosen\_pattern$ list and on the $l$ parameter. These nodes serve the only purpose of adding random nodes to the transactions. The fields for these nodes are picked at random from the previously generated $\boldsymbol{a}$ vector, and their value is randomly generated. This process is described in Algorithm \ref{generate_random_nodes}.
 
 \begin{algorithm}
 \caption{Generate the random nodes to be appended to the current transaction being generated}
 \label{generate_random_nodes}
 \begin{algorithmic}[1]
-\Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, String[] $a$, String[][] $M$}
+\Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, int $n$, String[] $\boldsymbol{a}$}
 \State $random\_nodes \gets []$
-\For{$i \gets 0 \text{ to } 1 + l + l \times |chose\_patterns|$}
+\For{$i \gets 0 \text{ to } 1 + l \times (1 + |chose\_patterns|)$}
     \State $rid \gets \text{ \texttt{random\_string() }}$
-    \State $fields\_for\_record \gets \{"rid": rid, "parent": None\}$
-    \For{$j \gets 0 \text{ to } |a| - 1$}
-        \State $field\_value \gets M[j][random\_int(0, |M[j]| - 1)]$
-        \State $fields\_for\_record[a[j]] \gets field\_value$
+    \State $fields\_for\_record \gets \{"rid": rid, "parent": \bot \}$
+    \For{$j \gets 0 \text{ to } n$}
+        \State $field\_value \gets \text{\texttt{random\_string()}}$
+        \State $fields\_for\_record[\boldsymbol{a}_j] \gets field\_value$
     \EndFor
     \State $random\_nodes[i] \gets TransactionTree()$
     \State $random\_nodes_{fields} \gets fields\_for\_record$
@@ -391,12 +374,12 @@ Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are me
 \State $transaction\_id = \text{ \texttt{random\_string() }}$
 \State $complete\_nodes\_list \gets []$
 \For{$i \gets 0 \text{ to } |chosen\_patterns| - 1$}
-    \State $chosen\_patterns[i]_{fields}["tid"] \gets transaction\_id$
+    \State $chosen\_patterns[i]_{fields["tid"]} \gets transaction\_id$
     \State $complete\_nodes\_list[i] \gets chosen\_patterns[i]$
 \EndFor
 \State $k \gets |chosen\_patterns|$
 \For{$i \gets k \text{ to } k + |random\_nodes| - 1$}
-    \State $random\_nodes[i - k]_{fields}["tid"] \gets transaction\_id$
+    \State $random\_nodes[i - k]_{fields["tid"]} \gets transaction\_id$
     \State $complete\_nodes\_list[i] \gets random\_nodes[i - k]$
 \EndFor
 \Return $complete\_nodes\_list$
@@ -446,12 +429,12 @@ Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the alg
 \caption{Generation of all transactions}
 \label{complete_transaction_generation}
 \begin{algorithmic}[1]
-\Function{TransactionGeneration}{TransactionTree[] $TPatterns$, Integer $T$, float $l$, String[] $a$, String[][] $M$, Dict(TransactionTree, Integer) $transaction\_indexes$}
+\Function{TransactionGeneration}{TransactionTree[] $TPatterns$, Integer $T$, float $l$, int $n$, String[] $\boldsymbol{a}$, Dict(TransactionTree, Integer) $transaction\_indexes$}
 \State $root\_list \gets []$
 \State $root\_list\_index \gets 0$
 \For{$index \gets 0 \text{ to } T - 1$}
     \State $chosen\_patterns \gets \text{PickPattern(TPatterns, transaction\_indexes, index)}$
-    \State $random\_nodes \gets \text{GenerateRandomNodes(chosen\_patterns, l, a, M)}$
+    \State $random\_nodes \gets \text{GenerateRandomNodes}(chosen\_patterns, l, n, \boldsymbol{a})$
     \State $complete\_nodes\_list \gets \text{MergeLists(chosen\_patterns, random\_nodes)}$
     \State $transaction\_root \gets \text{SingleTransactionGeneration(complete\_nodes\_list, chosen\_patterns)}$
     \State $root\_list[root\_list\_index] \gets transaction\_root$
