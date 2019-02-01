@@ -49,14 +49,20 @@
 %\crdata{0-12345-67-8/90/01}  % Allows default copyright data (X-XXXXX-XX-X/XX/XX) to be over-ridden.
 % --- End of Author Metadata ---
 
-\title{A data generator for frequent itemset mining in tree-like sequences of complex objects \\ \large Nicol\`o Pomini [203319] and Marco Merlin[205263]}
-%
-% You need the command \numberofauthors to handle the "boxing"
-% and alignment of the authors under the title, and to add
-% a section for authors number 4 through n.
-
+\title{A data generator for frequent itemset mining in tree-like sequences of complex objects}
 \numberofauthors{2}
-%
+\author{
+\alignauthor
+Nicol\`o Pomini\\
+       \affaddr{Mat. 203319}\\
+       \affaddr{University of Trento, Trento}\\
+       \affaddr{nicolo.pomini@studenti.unitn.it}
+\alignauthor
+Marco Merlin\\
+       \affaddr{Mat. 205263}\\
+       \affaddr{University of Trento, Trento}\\
+       \affaddr{marco.merlin@studenti.unitn.it}
+}
 \maketitle
 \begin{abstract}
 Data generation is essential to many companies nowadays, allowing testing data mining and processing applications using an almost unlimited amounts of data without being forced to buy it from third party businesses. While it is often true that generated data cannot have the same quality as real world data, it can still come pretty close by using parameterized generators, which can vary the generated data based on some parameters dictated by the user. In this way it is possible to change the way the data is generated, and so to simulate different real world scenarios. In the next chapters are described the algorithms, the methods used and the results obtained by developing a parameterized data generator for frequent itemsets in tree-like sequences of complex objects. Tree structures formed by complex objects are generated with dependencies between their attributes, meaning that the same sequence of attributes appears frequently in the generated trees. The generator uses different parameters to generate different patterns and change the way attributes depend from each other, so that many scenarios can be simulated. Further details about all the possible parameters can be found in the next chapters.
