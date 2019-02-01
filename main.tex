@@ -479,7 +479,35 @@ The software is developed using an object oriented paradigm, and therefore it is
 
 In addition to that, some other tests have been performed, focused on the scalability. Since the application requires many parameters to work, some of them are kept constant in every test, like the maximum number of attributes a record can have $n$, the number of possible values each field can assume $m$, the average pattern length $l$ and the threshold $t$ that indicates how many times a pattern has to appear to be considered frequent. In particular, the following value are used: $n = 10, m = 100, l = 5.0, t = 5$. Then, fixed the number of pattern $P$ to generate, our tests iterate on a list of integer, that represent the number of transaction $T$ to generate. The software is launched with these parameters, and the response time is saved and plotted with respect to $T$. For each test, the value of $T$ that are used are 10, 20, 50, 100, 200, 500, 1000. For each configuration, 5 tests are performed.
 
-The Figure~\ref{zerotwo} shows the performances of the software with a fixed value of patterns to generate $P = 0.2 * T$, the Figure~\ref{zerofive} with $P = 0.5 * T$, the Figure~\ref{zeroeight} with $P = 0.8 * T$, and the Figure~\ref{one} with $P = T$. Each of them plots the average response time of each configuration of the tests, but also the region between the minimum and the maximum time taken to repond for each configuration is colored, to show a best and a worst case.
+\begin{figure}
+\centering
+\epsfig{file=t02.pdf, scale=0.5}
+\caption{Test results with $P = 0.2 * T$.}
+\label{fig:zerotwo}
+\end{figure}
+
+\begin{figure}
+\centering
+\epsfig{file=t05.pdf, scale=0.5}
+\caption{Test results with $P = 0.5 * T$.}
+\label{fig:zerofive}
+\end{figure}
+
+\begin{figure}
+\centering
+\epsfig{file=t08.pdf, scale=0.5}
+\caption{Test results with $P = 0.5 * T$.}
+\label{fig:zeroeight}
+\end{figure}
+
+\begin{figure}
+\centering
+\epsfig{file=t1.pdf, scale=0.5}
+\caption{Test results with $P = T$.}
+\label{fig:one}
+\end{figure}
+
+The Figure~\ref{fig:zerotwo} shows the performances of the software with a fixed value of patterns to generate $P = 0.2 * T$, the Figure~\ref{fig:zerofive} with $P = 0.5 * T$, the Figure~\ref{fig:zeroeight} with $P = 0.8 * T$, and the Figure~\ref{fig:one} with $P = T$. Each of them plots the average response time of each configuration of the tests, but also the region between the minimum and the maximum time taken to repond for each configuration is colored, to show a best and a worst case.
 
 As can be seen, the parameter $P$ plays an important role in the outcomes, since the higher it is, the higher the total time. The shapes of the four graphics are the same, but with different scales, because of $P$. The test are performed on a machine with a 2.7 Ghz Intel Core i7 processor, and 16 GB of RAM.
 
