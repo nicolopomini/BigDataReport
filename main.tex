@@ -461,6 +461,7 @@ The various steps and algorithms explained in Section~\ref{sec:generation} are i
 
 The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices. The parameters are passed as arguments with flags and values when the program is started. The user can specify her own parameters, or use the default ones. It is also possible to set a flag to let the program print on the standard output which are the generated pattern. In this way is easy to test the correctness of the miner software that searches for these patterns.
 
+\subsection{Use the software}
 To use the software, is necessary to have a Python interpreter, at least at version 3.6, and to install the dependencies -- the libraries needed by the software -- running the command \texttt{pip install -r requirements.txt}. To launch the software is necessary to run the command \texttt{python src/main.py <arguments>}, with the following possible argument list:
 \begin{itemize}
 \item \texttt{-out filename}, to specify the filename on which the output is written. Default is \texttt{output}. Note that the extension \texttt{.csv} is automatically added, so passing the value \texttt{output} will produce a file named \texttt{output.csv};
