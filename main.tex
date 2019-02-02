@@ -140,7 +140,7 @@ The data generation process is parameterized, in order to let the user to use th
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
 \item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent.
 \end{itemize} 
-The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details.
+The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details. It is assumed that the dictionary data structure, with a method to add an object giving its key -- $add(key, value)$ -- and a method to search by key -- $lookup(key)$ -- exists.
 
 \subsection{Attribute generation}
 The very first part of the data generation process is about the attributes of the records. According to the assumptions made in Section~\ref{sec:assumptions}, each record has three attributes whose role is to uniquely identify a record -- the \texttt{rid} -- and to structure and relate records among them -- the \texttt{tid} to understand which transaction each record belongs to, and the \texttt{parent} to define the record hierarchy. In addition to these three, there is a certain number of \emph{generic attributes} that characterize each record.
@@ -200,14 +200,14 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \label{generate_node}
 \begin{algorithmic}[1]
 \Function{generateNode}{Integer $n$, String[] $\boldsymbol{a}$}
-\State $fields \gets \{\}$
+\State $fields \gets new Dictionary()$
 \For{$i \gets 1 \text{ to } n$}
 	\State $k \gets x : x \in [1, n]$
 	\State $field\_name \gets \boldsymbol{a}_k$
 	\State $field\_value \gets \text{\texttt{random\_string()}}$
-	\State $fields[field\_name] \gets field\_value$
+	\State $fields.add(field\_name, field\_value)$
 \EndFor
-\State $node \gets PatternTree()$
+\State $node \gets new PatternTree()$
 \State $node_{fields} \gets fields$ \\
 \Return $node$
 \EndFunction
@@ -276,14 +276,14 @@ Starting from the PatternTree objects generated in the previous step, they are c
 \State $fields \gets t_{fields}$
 \For{$i \gets 1 \text{ to } n$}
 	\If{$\boldsymbol{a}_i \notin fields$}
-		\State $fields[\boldsymbol{a}_i] \gets \text{\texttt{random\_string()}}$
+		\State $fields.add(\boldsymbol{a}_i, \text{\texttt{random\_string()}})$
 	\EndIf
 \EndFor
 \State $children \gets \{\}$
 \For{$child \in t_{children}$}
-	\State $children \gets children \cup \{translatePatterns(child, t, n, \boldsymbol{a}\}$
+	\State $children \gets children \cup \{translatePatterns(child, t, n, \boldsymbol{a})\}$
 \EndFor
-\State $node \gets TransactionTree()$
+\State $node \gets new TransactionTree()$
 \State $node_{rid} \gets rid$
 \State $node_{children} \gets children$
 \State $node_{fields} \gets fields$ \\
