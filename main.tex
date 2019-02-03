@@ -265,23 +265,18 @@ When the patterns are generated, it is the turn for the entire transactions to b
 
 The object defined in Table~\ref{tab:transactiontree} adds to each record a \texttt{rid} and the \texttt{tid}: the former is unique for each record, while the latter is unique for each transaction.
 
-Starting from the PatternTree objects generated in the previous step, they are converted into TransactionTree objects adding them an unique \texttt{rid} and the missing fields -- those fields that will not be part of the pattern. The \texttt{tid} is not set here, it will be added later. This transformation is done in Algorithm~\ref{translate_patterns}, which is initially called passing as PatternTree $t$ the root of a pattern, and as PatternTree $p$ a \texttt{null} value $\bot$. The function transform every node of the pattern recursively.
+Starting from the PatternTree objects generated in the previous step, they are converted into TransactionTree objects adding them a temporary \texttt{rid} (which will be changed later on). The \texttt{tid} is not set here, it will be added later. This transformation is done in Algorithm~\ref{translate_patterns}, which is initially called passing as PatternTree $t$ the root of a pattern, and as PatternTree $p$ a \texttt{null} value $\bot$. The function transforms every node of the pattern recursively. Note that this algorithm does not set anything else but the already defined pattern attributes, a temporary \texttt{rid}, the parent and the children. The \texttt{rid} is changed later on because each pattern is probably going to appear more than once and each of their nodes need to be unique. Same goes for the non-pattern fields; they are set later on so that they can be unique and random for each pattern's appearance. 
 
 \begin{algorithm}
 \caption{Transform a PatternTree into a TransactionTree.}
 \label{translate_patterns}
 \begin{algorithmic}[1]
-\Function{translatePatterns}{PatternTree $t$, PatternTree $p$, Integer $n$, String[] $\boldsymbol{a}$}
+\Function{translatePatterns}{PatternTree $t$, PatternTree $p$}
 \State $rid \gets \text{ \texttt{random\_string() }}$
 \State $fields \gets t_{fields}$
-\For{$i \gets 1 \text{ to } n$}
-	\If{$\boldsymbol{a}_i \notin fields$}
-		\State $fields.add(\boldsymbol{a}_i, \text{\texttt{random\_string()}})$
-	\EndIf
-\EndFor
 \State $children \gets \{\}$
 \For{$child \in t_{children}$}
-	\State $children \gets children \cup \{translatePatterns(child, t, n, \boldsymbol{a})\}$
+	\State $children \gets children \cup \{translatePatterns(child, t)\}$
 \EndFor
 \State $node \gets new TransactionTree()$
 \State $node_{rid} \gets rid$
@@ -302,10 +297,10 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $max\_nodes$, Integer $min\_nodes$, Integer $T$, Integer $t$}
 \State $transaction\_indexes \gets \{\}$
 \ForEach{$pattern \in TPatterns$}
-	\State $indexes \gets [\:]$
 	\State $k \gets T - (|pattern| - min\_pattern\_nodes) \times (T - t) / (max(1, max\_pattern\_nodes - min\_pattern\_nodes))$
+	\State $tree\_indexes \gets [\:]$
 	\For{$i \gets 0 \text{ to } k - 1$}
-	\State $indexes[i] \gets random\_int(0, T - 1)$
+	\State $tree\_indexes[i] \gets \texttt{random\_int(0, T - 1)}$
 	\EndFor
 	\State $transaction\_indexes[pattern] \gets tree\_indexes$
 \EndFor
@@ -347,16 +342,16 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \caption{Generate the random nodes to be appended to the current transaction being generated}
 \label{generate_random_nodes}
 \begin{algorithmic}[1]
-\Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, int $n$, String[] $\boldsymbol{a}$}
+\Function{GenerateRandomNodes}{TransactionTree[] $chosen\_patterns$, float $l$, Integer $n$, String[] $\boldsymbol{a}$}
 \State $random\_nodes \gets []$
-\For{$i \gets 0 \text{ to } 1 + l \times (1 + |chose\_patterns|)$}
+\For{$i \gets 0 \text{ to } 1 + l \times (1 + |chosen\_patterns|)$}
     \State $rid \gets \text{ \texttt{random\_string() }}$
     \State $fields\_for\_record \gets \{"rid": rid, "parent": \bot \}$
     \For{$j \gets 0 \text{ to } n$}
         \State $field\_value \gets \text{\texttt{random\_string()}}$
         \State $fields\_for\_record[\boldsymbol{a}_j] \gets field\_value$
     \EndFor
-    \State $random\_nodes[i] \gets TransactionTree()$
+    \State $random\_nodes[i] \gets newTransactionTree()$
     \State $random\_nodes_{fields} \gets fields\_for\_record$
 \EndFor
 \Return $random\_nodes$
@@ -364,22 +359,44 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \end{algorithmic}
 \end{algorithm}
 
-Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$, and an unique \texttt{tid} is assigned to each member of this list. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists} and Algorithm \ref{transaction_generation}.
+Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are merged together into one list which will be called $nodes\_to\_append$, and an unique \texttt{tid} is assigned to each member of this list. Before the merging operation, a definitive unique \texttt{rid} is given to each node in each of the patterns in $chosen\_patterns$ and all their missing fields are filled with random strings. A root for the transaction is then chosen randomly from $nodes\_to\_append$. This process can be seen in Algorithm \ref{merging_lists}, Algorithm \ref{populate_pattern_node} and Algorithm \ref{transaction_generation}.
 
 \begin{algorithm}
-\caption{Merging of the two lists and assignment of the tid}
+\caption{Randomly populates the missing fields of a node recursively}
+\label{populate_pattern_node}
+\begin{algorithmic}[1]
+\Function{PopulatePatternNode}{TransactionTree $node\_to\_populate$, Integer $n$, String[] $\boldsymbol{a}$}
+\State $node\_to\_populate_{rid} \gets \texttt{random\_string()}$
+\State $fields \gets node\_to\_populate_{fields}$
+\For{$i \gets 1 \text{ to } n$}
+	\If{$\boldsymbol{a}_i \notin fields$}
+		\State $fields.add(\boldsymbol{a}_i, \text{\texttt{random\_string()}})$
+	\EndIf
+\EndFor
+\State $children \gets \{\}$
+\For{$child \in node\_to\_populate_{children}$}
+	\State $children \gets children \cup \{PopulatePatternNode(child, n, \boldsymbol{a})\}$
+\EndFor
+\Return $node\_to\_populate$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Merging of the two lists, assignment of the tid and missing fields}
 \label{merging_lists}
 \begin{algorithmic}[1]
-\Function{MergeLists}{TransactionTree[] $chosen\_patterns$, TransactionTree[] $random\_nodes$}
+\Function{MergeLists}{TransactionTree[] $chosen\_patterns$, TransactionTree[] $random\_nodes$, Integer n, String[] $\boldsymbol{a}$}
 \State $transaction\_id = \text{ \texttt{random\_string() }}$
 \State $complete\_nodes\_list \gets []$
 \For{$i \gets 0 \text{ to } |chosen\_patterns| - 1$}
-    \State $chosen\_patterns[i]_{fields["tid"]} \gets transaction\_id$
+    \State $chosen\_patterns[i] \gets PopulatePatternNode(chosen\_patterns[i], n, \boldsymbol{a})$
+    \State $chosen\_patterns[i]_{tid} \gets transaction\_id$
     \State $complete\_nodes\_list[i] \gets chosen\_patterns[i]$
 \EndFor
 \State $k \gets |chosen\_patterns|$
 \For{$i \gets k \text{ to } k + |random\_nodes| - 1$}
-    \State $random\_nodes[i - k]_{fields["tid"]} \gets transaction\_id$
+    \State $random\_nodes[i - k]_{tid} \gets transaction\_id$
     \State $complete\_nodes\_list[i] \gets random\_nodes[i - k]$
 \EndFor
 \Return $complete\_nodes\_list$
@@ -389,14 +406,14 @@ Thirdly, the randomly generated nodes and the $chosen\_patterns$ elements are me
 
 Furthermore, another list called $current\_tree$ is created, and its purpose is to store the nodes which are already part of the transaction; the root node, together with all the pattern nodes if a pattern was chosen as root, is appended to this list.
 
-Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. To sum it up, for each transaction to be generated function PickPattern (Algorithm \ref{pick_patterns}) is called to select the patterns that should appear in the transaction. Next, a number of random nodes to be appended to the transaction is generated using the GenerateRandomeNodes function (Algorithm \ref{generate_random_nodes}). Next, using the function MergeLists (Algorithm \ref{merging_lists}), the chosen patterns and the randomly generated nodes are merged into one list and a transaction id is assigned to all the nodes in this list. Finally, the function SingleTransactionGeneration (Algorithm \ref{transaction_generation}) is called to randomly append all the nodes in order to generate the transaction. This whole process is shown in Algorithm \ref{complete_transaction_generation}.
+Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the algorithm will keep choosing random nodes from it and append them to nodes in the $current\_tree$ list randomly. When a node is appended to the tree, it is deleted from the $nodes\_tp\_append$ list and inserted into the $current\_tree$ list, together with all the pattern nodes if the appended node is a pattern root. Once the $nodes\_to\_append$ list is empty, the transaction root is appended to the return array. This process is shown in Algorithm \ref{transaction_generation}. To sum it up, for each transaction to be generated function PickPattern (Algorithm \ref{pick_patterns}) is called to select the patterns that should appear in the transaction. Next, a number of random nodes to be appended to the transaction is generated using the GenerateRandomeNodes function (Algorithm \ref{generate_random_nodes}). Next, a permanent \texttt{rid} is assigned to each node in each pattern that was selected for the transaction and all of their missing fields are filled with random values (Algorithm \ref{merging_lists} and Algorithm \ref{populate_pattern_node}). Next, using the function MergeLists (Algorithm \ref{merging_lists}), the chosen patterns and the randomly generated nodes are merged into one list. Finally, the function SingleTransactionGeneration (Algorithm \ref{transaction_generation}) is called to randomly append all the nodes in order to generate the transaction. This whole process is shown in Algorithm \ref{complete_transaction_generation}.
 
 \begin{algorithm}
 \caption{Generation of single transaction}
 \label{transaction_generation}
 \begin{algorithmic}[1]
 \Function{SingleTransactionGeneration}{TransactionTree[] $complete\_nodes\_list$, TransactionTree[] $chosen\_patterns$}
-\State $transaction\_root \gets complete\_nodes\_list[random\_int(0, |complete\_nodes\_list| - 1)]$
+\State $transaction\_root \gets complete\_nodes\_list[\texttt{random\_int(0, |complete\_nodes\_list| - 1)}]$
 \State $current\_tree \gets [transaction\_root]$
 \State $current\_tree\_index \gets 1$
 \If{$transaction\_root \in chosen\_patterns$}
@@ -407,9 +424,10 @@ Fourthly, as long as there are elements in the $nodes\_to\_append$ list, the alg
 \EndIf
 \State $complete\_nodes\_list.remove(transaction\_root)$
 \For{$i \gets 0 \text{ to } |complete\_nodes\_list| - 1$}
-    \State $node\_to\_append \gets complete\_nodes\_list[random\_int(0, |complete\_nodes\_list| - 1)]$
-    \State $chosen\_parent \gets current\_tree[random.int(0, |current\_tree| - 1)]$
-    \State $chosen\_parent.addChild(node\_to\_append)$
+    \State $node\_to\_append \gets complete\_nodes\_list[\texttt{random\_int(0, |complete\_nodes\_list| - 1)}]$
+    \State $chosen\_parent \gets current\_tree[\texttt{random\_int(0, |current\_tree| - 1)}]$
+    \State $node\_to\_append_{parent} \gets chosen\_parent_{rid}$
+    \State $chosen\_parent_{children}.add(node\_to\_append)$
     \State $current\_tree[current\_tree\_index] \gets node\_to\_append$
     \State $current\_tree\_index \gets current\_tree\_index + 1$
     \If{$node\_to\_append \in chosen\_patterns$}
