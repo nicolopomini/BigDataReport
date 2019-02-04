@@ -140,7 +140,7 @@ The data generation process is parameterized, in order to let the user to use th
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
 \item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent.
 \end{itemize} 
-The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details. It is assumed that the dictionary data structure, with a method to add an object giving its key -- $add(key, value)$ -- and a method to search by key -- $lookup(key)$ -- exists.
+The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated, including inside each of them a certain number of patterns. In the following sub-sections these three steps are explained in details. It is assumed that the dictionary data structure, with a method to add an object given its key -- $add(key, value)$ -- and a method to return a value by key (or $\bot$ when the key is not in the dictionary) -- $lookup(key)$ -- exists.
 
 \subsection{Attribute generation}
 The very first part of the data generation process is about the attributes of the records. According to the assumptions made in Section~\ref{sec:assumptions}, each record has three attributes whose role is to uniquely identify a record -- the \texttt{rid} -- and to structure and relate records among them -- the \texttt{tid} to understand which transaction each record belongs to, and the \texttt{parent} to define the record hierarchy. In addition to these three, there is a certain number of \emph{generic attributes} that characterize each record.
@@ -263,7 +263,7 @@ When the patterns are generated, it is the turn for the entire transactions to b
 \label{tab:transactiontree}
 \end{table}
 
-The object defined in Table~\ref{tab:transactiontree} adds to each record a \texttt{rid} and the \texttt{tid}: the former is unique for each record, while the latter is unique for each transaction.
+The object defined in Table~\ref{tab:transactiontree} adds to each record a \texttt{rid} and the \texttt{tid}: the former is unique for each record, while the latter is unique for each transaction. We also assume that the TransactionTree objects have a \texttt{getNodes()} method which returns an array containing the nodes which make up the tree (rooted in the node which calls the function).
 
 Starting from the PatternTree objects generated in the previous step, they are converted into TransactionTree objects adding them a temporary \texttt{rid} (which will be changed later on). The \texttt{tid} is not set here, it will be added later. This transformation is done in Algorithm~\ref{translate_patterns}, which is initially called passing as PatternTree $t$ the root of a pattern, and as PatternTree $p$ a \texttt{null} value $\bot$. The function transforms every node of the pattern recursively. Note that this algorithm does not set anything else but the already defined pattern attributes, a temporary \texttt{rid}, the parent and the children. The \texttt{rid} is changed later on because each pattern is probably going to appear more than once and each of their nodes need to be unique. Same goes for the non-pattern fields; they are set later on so that they can be unique and random for each pattern's appearance. 
 
@@ -320,12 +320,13 @@ Finally, the actual transactions are generated and this sequence of steps is rep
 \caption{Pick the patterns for the current transaction being generated}
 \label{pick_patterns}
 \begin{algorithmic}[1]
-\Function{PickPattern}{TransactionTree[] $tPatterns$, Dict(TransactionTree, Integer) $transactionIndexes$, Integer $currentTransactionIndex$}
+\Function{PickPattern}{TransactionTree[] $tPatterns$, Dict(TransactionTree, Integer[]) $transactionIndexes$, Integer $currentTransactionIndex$}
 \State $chosenPatterns \gets []$
 \State $chosenPatternIndex \gets 0$
 \ForEach{$pattern \in tPatterns$}
     \For{$i \gets 0 \text{ to } |transactionIndexes[pattern]| - 1$}
-        \If{$transactionIndexes[pattern][i] = currentTransactionIndex$}
+        \State $patternIndexesArray \gets transactionIndexes.lookup(pattern)$
+        \If{$patternIndexesArray[i] = currentTransactionIndex$}
             \State $chosenPatterns[chosenPatternIndex] \gets pattern$
             \State $chosenPatternIndex \gets chosenPatternIndex + 1$
         \EndIf
