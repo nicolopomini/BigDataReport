@@ -295,14 +295,14 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \label{generate_indexes}
 \begin{algorithmic}[1]
 \Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $maxNodes$, Integer $minNodes$, Integer $T$, Integer $t$}
-\State $transactionIndexes \gets \{\}$
+\State $transactionIndexes \gets new Dictionary()$
 \ForEach{$pattern \in TPatterns$}
 	\State $k \gets T - (|pattern| - minPatternNodes) \times (T - t) / (max(1, maxPatternNodes - minPatternNodes))$
-	\State $treeIndexes \gets [\:]$
+	\State $treeIndexes \gets [k]$
 	\For{$i \gets 0 \text{ to } k - 1$}
-	\State $treeIndexes[i] \gets \texttt{randomInt(0, T - 1)}$
+		\State $treeIndexes[i] \gets \texttt{randomInt(0, T - 1)}$
 	\EndFor
-	\State $transactionIndexes[pattern] \gets treeIndexes$
+	\State $transactionIndexes.add(pattern, treeIndexes)$
 \EndFor
 \Return $transactionIndexes$
 \EndFunction
@@ -346,13 +346,16 @@ Secondly, some $TransactionTree$ nodes are generated each with $n$ - 3 randomly 
 \State $randomNodes \gets []$
 \For{$i \gets 0 \text{ to } 1 + l \times (1 + |chosenPatterns|)$}
     \State $rid \gets \text{ \texttt{randomString() }}$
-    \State $fieldsForRecord \gets \{"rid": rid, "parent": \bot \}$
+    \State $fieldsForRecord \gets new Dictionary()$
+    \State $fieldsForRecord.add("rid", rid)$
+    \State $fieldsForRecord.add("parent", \bot)$
     \For{$j \gets 0 \text{ to } n$}
         \State $fieldValue \gets \text{\texttt{randomString()}}$
-        \State $fieldsForRecord[\boldsymbol{a}_j] \gets fieldValue$
+        \State $fieldsForRecord.add(\boldsymbol{a}_j, fieldValue)$
     \EndFor
-    \State $randomNodes[i] \gets newTransactionTree()$
-    \State $randomNodes_{fields} \gets fieldsForRecord$
+    \State $node \gets new TransactionTree()$ 
+    \State $node_{fields} \gets fieldsForRecord$
+    \State $randomNodes[i] \gets node$
 \EndFor
 \Return $randomNodes$
 \EndFunction
@@ -468,17 +471,19 @@ The various steps and algorithms explained in Section~\ref{sec:generation} are i
 
 The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices. The parameters are passed as arguments with flags and values when the program is started. The user can specify her own parameters, or use the default ones. It is also possible to set a flag to let the program print on the standard output which are the generated pattern. In this way is easy to test the correctness of the miner software that searches for these patterns.
 
+To generate a random string, an Universally unique identifier -- \texttt{uuid} -- of 128 bit is generated, then it is converted to an hexadecimal number and then casted to string. To generate random integers, the standard random library of python is used.
+
 \subsection{Use the software}
 To use the software, is necessary to have a Python interpreter, at least at version 3.6, and to install the dependencies -- the libraries needed by the software -- running the command \texttt{pip install -r requirements.txt}. To launch the software is necessary to run the command \texttt{python src/main.py <arguments>}, with the following possible argument list:
 \begin{itemize}
 \item \texttt{-out filename}, to specify the filename on which the output is written. Default is \texttt{output}. Note that the extension \texttt{.csv} is automatically added, so passing the value \texttt{output} will produce a file named \texttt{output.csv};
-\item \texttt{-t 10}, to specify how many transaction to generate. Default is 20;
-\item \texttt{-p 10}, number of patterns to create. Default is 4;
-\item \texttt{-avg 10}, the average length of a pattern. Default is 3;
-\item \texttt{-nf 10}, the number of fields each records will have. Default is 10;
-\item \texttt{-avg 10}, the average length of a pattern. Default is 3;
-\item \texttt{-thr 3}, the minimum number of times a pattern appears. Default is 4;
-\item \texttt{-pp true}, to print on the standard output the generated patterns. Default is false;
+\item \texttt{-t integer}, to specify how many transaction to generate. Default is 20;
+\item \texttt{-p integer}, number of patterns to create. Default is 4;
+\item \texttt{-avg integer}, the average length of a pattern. Default is 3;
+\item \texttt{-nf integer}, the number of fields each records will have. Default is 10;
+\item \texttt{-avg integer}, the average length of a pattern. Default is 3;
+\item \texttt{-thr integer}, the minimum number of times a pattern appears. Default is 4;
+\item \texttt{-pp boolean}, to print on the standard output the generated patterns. Default is \texttt{false};
 \end{itemize}
 
 \section{Evaluation}
