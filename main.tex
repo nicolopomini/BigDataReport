@@ -276,7 +276,7 @@ Starting from the PatternTree objects generated in the previous step, they are c
 \State $fields \gets t_{fields}$
 \State $children \gets \{\}$
 \For{$child \in t_{children}$}
-	\State $children \gets children \cup \{translatePatterns(child, t)\}$
+	\State $children \gets children \cup \{translate\-Patterns(child, t)\}$
 \EndFor
 \State $node \gets new TransactionTree()$
 \State $node_{rid} \gets rid$
@@ -294,7 +294,7 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \caption{Generate transaction indexes for all patterns.}
 \label{generate_indexes}
 \begin{algorithmic}[1]
-\Function{GenerateIndexesDictionary}{TransactionTree[] $TPatterns$, Integer $maxNodes$, Integer $minNodes$, Integer $T$, Integer $t$}
+\Function{GenerateIndexes\-Dictionary}{Transaction\-Tree[] $TPatterns$, Integer $maxNodes$, Integer $minNodes$, Integer $T$, Integer $t$}
 \State $transactionIndexes \gets new Dictionary()$
 \ForEach{$pattern \in TPatterns$}
 	\State $k \gets T - (|pattern| - minPatternNodes) \times (T - t) / (max(1, maxPatternNodes - minPatternNodes))$
@@ -325,10 +325,10 @@ Finally, the actual transactions are generated and this sequence of steps is rep
 \State $chosenPatternIndex \gets 0$
 \ForEach{$pattern \in tPatterns$}
     \For{$i \gets 0 \text{ to } |transactionIndexes[pattern]| - 1$}
-        \State $patternIndexesArray \gets transactionIndexes.lookup(pattern)$
-        \If{$patternIndexesArray[i] = currentTransactionIndex$}
-            \State $chosenPatterns[chosenPatternIndex] \gets pattern$
-            \State $chosenPatternIndex \gets chosenPatternIndex + 1$
+        \State $patternIndexesArray \gets transaction\-Indexes.lookup(pattern)$
+        \If{$patternIndexesArray[i] = current\-Transaction\-Index$}
+            \State $chosenPatterns[chosen\-Pattern\-Index] \gets pattern$
+            \State $chosenPatternIndex \gets chosen\-Pattern\-Index + 1$
         \EndIf
     \EndFor
 \EndFor
@@ -379,7 +379,7 @@ Thirdly, the randomly generated nodes and the $chosenPatterns$ elements are merg
 \EndFor
 \State $children \gets \{\}$
 \For{$child \in nodeToPopulate_{children}$}
-	\State $children \gets children \cup \{PopulatePatternNode(child, n, \boldsymbol{a})\}$
+	\State $children \gets children \cup \{Populate\-Pattern\-Node(child, n, \boldsymbol{a})\}$
 \EndFor
 \Return $nodeToPopulate$
 \EndFunction
@@ -394,7 +394,7 @@ Thirdly, the randomly generated nodes and the $chosenPatterns$ elements are merg
 \State $tid = \text{ \texttt{randomString() }}$
 \State $completeNodesList \gets []$
 \For{$i \gets 0 \text{ to } |chosenPatterns| - 1$}
-    \State $chosenPatterns[i] \gets PopulatePatternNode(chosenPatterns[i], n, \boldsymbol{a})$
+    \State $chosenPatterns[i] \gets Populate\-Pattern\-Node(chosenPatterns[i], n, \boldsymbol{a})$
     \State $chosenPatterns[i]_{tid} \gets tid$
     \State $completeNodesList[i] \gets chosenPatterns[i]$
 \EndFor
@@ -417,7 +417,7 @@ Fourthly, as long as there are elements in the $nodesToAppend$ list, the algorit
 \label{transaction_generation}
 \begin{algorithmic}[1]
 \Function{SingleTransactionGeneration}{TransactionTree[] $completeNodesList$, TransactionTree[] $chosenPatterns$}
-\State $transactionRoot \gets completeNodesList[\texttt{randomInt(0, |completeNodesList| - 1)}]$
+\State $transactionRoot \gets complete\-Nodes\-List[\texttt{randomInt(0, |completeNodesList| - 1)}]$
 \State $currentTree \gets [transactionRoot]$
 \State $currentTreeIndex \gets 1$
 \If{$transactionRoot \in chosenPatterns$}
@@ -428,16 +428,16 @@ Fourthly, as long as there are elements in the $nodesToAppend$ list, the algorit
 \EndIf
 \State $completeNodesList.remove(transactionRoot)$
 \For{$i \gets 0 \text{ to } |completeNodesList| - 1$}
-    \State $nodeToAppend \gets completeNodesList[\texttt{randomInt(0, |completeNodesList| - 1)}]$
-    \State $chosenParent \gets currentTree[\texttt{randomInt(0, |currentTree| - 1)}]$
+    \State $nodeToAppend \gets complete\-Nodes\-List[\texttt{randomInt(0, |completeNodesList| - 1)}]$
+    \State $chosenParent \gets current\-Tree[\texttt{randomInt(0, |currentTree| - 1)}]$
     \State $nodeToAppend_{parent} \gets chosenParent_{rid}$
     \State $chosenParent_{children}.add(nodeToAppend)$
-    \State $currentTree[currentTreeIndex] \gets nodeToAppend$
+    \State $currentTree[currentTreeIndex] \gets node\-To\-Append$
     \State $currentTreeIndex \gets currentTreeIndex + 1$
     \If{$nodeToAppend \in chosenPatterns$}
         \ForEach{$node \in nodeToAppend.getNodes()$}
             \State $currentTree[currentTreeIndex] \gets node$
-            \State $currentTreeIndex \gets currentTreeIndex + 1$
+            \State $currentTreeIndex \gets current\-Tree\-Index + 1$
         \EndFor
     \EndIf
     \State $completeNodesList.remove(nodeToAppend)$
