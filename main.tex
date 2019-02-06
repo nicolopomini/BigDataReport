@@ -65,7 +65,7 @@ Marco Merlin\\
 }
 \maketitle
 \begin{abstract}
-Data generation is essential to many companies nowadays, allowing to test data mining and processing applications using an almost unlimited amounts of data without being forced to buy it from third party businesses. While it is often true that generated data cannot have the same quality as real world data, it can still come pretty close by using parameterized generators, which can vary the generated data based on some parameters dictated by the user. Parameters allow to change the way the data is generated, and effectively simulate different real world scenarios. In the next chapters are described the algorithms, the methods used and the results obtained by developing a parameterized data generator for frequent itemsets in tree-like sequences of complex objects. Tree structures formed by complex objects are generated with dependencies between their attributes, meaning that the same sequence of attributes appears frequently in the generated trees. The generator uses different parameters to generate different patterns and change the dependencies between the attributes, so that many scenarios can be simulated. Further details about all the possible parameters can be red in the next chapters.
+Data generation is essential to many companies nowadays, allowing to test data mining and processing applications using an almost unlimited amounts of data without being forced to buy it from third party businesses. While it is often true that generated data cannot have the same quality as real world data, it can still come pretty close by using parameterized generators, which can vary the generated data based on some parameters dictated by the user. Parameters allow to change the way the data is generated, and effectively simulate different real world scenarios. In the next chapters are described the algorithms, the methods used and the results obtained by developing a parameterized data generator for frequent itemsets in tree-like sequences of complex objects. Tree structures formed by complex objects are generated with dependencies between their attributes, meaning that some sequences of correlated attributes appear frequently in the generated trees. The generator uses different parameters to generate different patterns and change the dependencies between the attributes, so that many scenarios can be simulated. Further details about all the possible parameters can be red in the next chapters.
 \end{abstract}
 
 \terms{Data mining}
@@ -73,7 +73,7 @@ Data generation is essential to many companies nowadays, allowing to test data m
 \keywords{Data generation, frequent itemset mining}
 
 \section{Introduction}
-Nowadays, the daily generation of data is growing exponentially. People, companies, sensors, IoT devices and many other things produce every day a huge amount of data: according to forbes.com\footnote{forbes.com/sites/bernardmarr/2018/05/21/how-much-data-do-we-create-every-day-the-mind-blowing-stats-everyone-should-read}, 2.5 quintillion bytes of data are generates. Thanks to these numbers, several fields of computer science related to data are also growing very fast. One of these is \emph{data mining}.
+Nowadays, the daily generation of data is growing exponentially. People, companies, sensors, IoT devices and many other things produce every day a huge amount of data: according to forbes.com\footnote{forbes.com/sites/bernardmarr/2018/05/21/how-much-data-do-we-create-every-day-the-mind-blowing-stats-everyone-should-read}, 2.5 quintillion bytes of data a day are generates. Thanks to these numbers, several fields of computer science related to data are also growing very fast. One of these is \emph{data mining}.
 
 As suggested by its name, the aim of data mining is to discover and extract pattern, and more general information, from great amount of data. The larger the available dataset, the more accurate and meaningful the results. Data mining is a multidisciplinary subject which involves many techniques coming from many different fields such as computer science, statistics and data visualization.
 
@@ -128,7 +128,7 @@ A \emph{generic attribute} is any attribute of a record which is not the \texttt
 
 All the records are assumed to have the same attributes -- some of them may be empty, to make the organization of the data easier. This contraint does not cause any loss of generality: in fact, in case the records are desired to be composed by a different number (and type) of attributes, it is sufficient to provide to each record all the attributes, leaving some of them empty. 
 
-Furthermore, the output is assumed to be organized in a matrix $M \in \Sigma^{n * d}$, where $\Sigma$ is the dictionary from which the values of the attributes belong to -- it can be a finite subset of $\mathbb{N}$, or a set of strings -- $n$ is the number of records, and $d$ the number of attributes per record.
+Furthermore, the output is assumed to be organized in a matrix $M \in \Sigma^{n \times d}$, where $\Sigma$ is the dictionary from which the values of the attributes belong to -- it can be a finite subset of $\mathbb{N}$, or a set of strings -- $n$ is the number of records, and $d$ the number of attributes per record.
 
 \section{Data generation}
 \label{sec:generation}
@@ -140,12 +140,12 @@ The data generation process is parameterized, in order to let the user to use th
 \item the number of fields $n$ that each record has, which is an integer -- as explained in Section~\ref{sec:assumptions}, the minimum value is 4;
 \item a threshold $t$ that indicates the number of times a pattern should appear among all transactions in order to be frequent.
 \end{itemize} 
-The data generation process is structured as follows: firstly, \emph{generic attributes} are generated; secondly, the patterns are generated; thirdly, the transactions are generated with a variable amount of previously generated patterns in them. In the following sub-sections these three steps are explained in detail. It is assumed that the dictionary data structure, with a method to add an object given its key -- $add(key, value)$ -- and a method to return a value by key (or $\bot$ when the key is not in the dictionary) -- $lookup(key)$ -- exists.
+The data generation process is structured as follows: firstly, the name of the fields of the records are generated; secondly, the patterns are generated; thirdly, the transactions are generated with a variable amount of previously generated patterns in them. In the following sub-sections these three steps are explained in detail. It is assumed that the dictionary data structure, with a method to add an object given its key -- $add(key, value)$ -- and a method to return a value by key (or $\bot$ when the key is not in the dictionary) -- $lookup(key)$ -- exists.
 
 \subsection{Attribute generation}
 The very first part of the data generation process is about the attributes of the records. According to the assumptions made in Section~\ref{sec:assumptions}, each record has three attributes whose role is to uniquely identify a record -- the \texttt{rid} -- and to structure and relate records among them -- the \texttt{tid} to understand which transaction each record belongs to, and the \texttt{parent} to define the record hierarchy. In addition to these three, there is a certain number of \emph{generic attributes} that characterize each record.
 
-All the possible \emph{generic attributes} are generated. Without loss of generality, they all are generated as strings -- since every object can be represented by a string and built from a string. In particular, $n - 3$ strings are generated, which represent the names of the attributes -- which can be also seen the keys or the field names. In other words, a vector $\boldsymbol{a}$ -- of $n$ elements is created. It contains all the attribute names.
+All the names of the possible \emph{generic attributes} are generated. Without loss of generality, they all are generated as strings -- since every object can be represented by a string and built from a string. In particular, $n - 3$ strings are generated, which represent the names of the attributes -- which can be also seen the keys or the field names. In other words, a vector $\boldsymbol{a}$ -- of $n - 3$ elements is created. It contains all the attribute names.
 
 To do so, let us assume the existence of a function that generates a random string, every time unique:
 \begin{verbatim}
@@ -159,7 +159,7 @@ With the Algorithm~\ref{generate_attributes}, $\boldsymbol{a}$ is generated.
 \label{generate_attributes}
 \begin{algorithmic}[1]
 \Function{generateAttributeNames}{Integer $n$}
-\State $\boldsymbol{a} \gets new Integer[n]$
+\State $\boldsymbol{a} \gets new Integer[n - 3]$
 \For{$i \gets 1 \text{ to } n$}
 	\State $\boldsymbol{a}_i \gets \text{ \texttt{randomString() }} $ 
 \EndFor
@@ -185,15 +185,15 @@ Once the possible names and values of the fields are defined, the patterns can b
 
 As can be seen in Table~\ref{tab:patterntree}, the object is a generic tree with an arbitrary number of children for every node. Furthermore, the attribute \emph{fields} represent the list of fields that characterize the pattern: this means that the values contained in this attribute form the pattern itself. For example, if \emph{fields} of a given node is equal to $ \{ color : blue \} $, it means that in the pattern will appear a node with the attribute \emph{color} set to \emph{blue}. The attribute \emph{fields} is a dictionary, with attribute names as keys, and attribute values as the values. It does not contain the fields \texttt{rid}, \texttt{tid} and \texttt{parent}, because they are specific for a record, and not related to the pattern.
 
-The generation of the patterns relies on four of the parameters listed at the beginning of Section~\ref{sec:generation}: the number of patterns to be generated $P$, the average length of a pattern $l$, the number of global fields $n$ and the number of values for each field $m$.
+The generation of the patterns relies on three of the parameters listed at the beginning of Section~\ref{sec:generation}: the number of patterns to be generated $P$, the average length of a pattern $l$ and the number of global fields $n$.
 
-Let $Pl$ be the length of a pattern, which represents the number of edges it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decided using a Poisson random variable with mean $l$. This type of random variable was chosen as it models events occurring successively and independently in a given time frame, and this scenario fits perfectly because the structure -- and the length -- of a single pattern is independent from the others. Furthermore, publications like \cite{agrawal1994fast} and \cite{ivancsy2006time} use the same approach during the pattern generation. For each node to be created, a number $k \le n$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is randomly created with the function \texttt{randomString()}. All the nodes are saved into a set, called \emph{generated}.
+Let $Pl$ be the length of a pattern, which represents the number of edges it contains. Consequently, the number of nodes in the pattern is $1 + Pl$. The value of $Pl$ is decided using a Poisson random variable with mean $l$. This type of random variable is chosen because it models events occurring successively and independently in a given time frame, and this scenario fits perfectly because the structure -- and the length -- of a single pattern is independent from the others. Furthermore, publications like \cite{agrawal1994fast} and \cite{ivancsy2006time} use the same approach during the pattern generation. For each node to be created, a number $k \le n - 3$ of field names is picked randomly from the vector $\boldsymbol{a}$ generated previously, and for each field name one value is randomly created with the function \texttt{randomString()}. All the nodes are saved into a set, called \emph{generated}.
 
 Once $1 + Pl$ nodes are generated, another set is created, called \emph{included}. The latter represents the nodes exctacted from \emph{generated} to whom a parent node have been assigned. At the beginnig, this set is empty. Randomly, one node from \emph{generated} is taken and moved into \emph{included}, assigning to it a \texttt{null} parent ($\bot$ symbol): this is the root node of the pattern. 
 
 In turn, each node in \emph{generated} is taken and moved into \emph{included}, assigning to it a parent picked from the latter set. In this way every tree takes shapes.
 
-The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields, while the Algorithm~\ref{generate_patterns} generates $P$ patterns, choosing the length of each one using a Poisson random variable. The latter returns a list of PatternTree object, each one is the root node of a pattern.
+The Algorithm~\ref{generate_node} generates a single node, with $k \le n - 3$ fields, while the Algorithm~\ref{generate_patterns} generates $P$ patterns, choosing the length of each one using a Poisson random variable. The latter returns a list of PatternTree object, each one is the root node of a pattern.
 
 \begin{algorithm}
 \caption{Generate a node.}
@@ -202,7 +202,7 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \Function{generateNode}{Integer $n$, String[] $\boldsymbol{a}$}
 \State $fields \gets new Dictionary()$
 \For{$i \gets 1 \text{ to } n$}
-	\State $k \gets x : x \in [1, n]$
+	\State $k \gets randomInt(1, n - 3)$
 	\State $fieldName \gets \boldsymbol{a}_k$
 	\State $fieldValue \gets \text{\texttt{randomString()}}$
 	\State $fields.add(fieldName, fieldValue)$
@@ -221,7 +221,7 @@ The Algorithm~\ref{generate_node} generates a single node, with $k \le n$ fields
 \Function{generatePatterns}{Integer $P$, float $l$, Integer $n$, String[] $\boldsymbol{a}$}
 \State $patterns \gets \{\}$
 \For{$i \gets 1 \text{ to } P$}
-	\State $Pl \gets Poisson(l)$
+	\State $Pl \gets \lfloor Poisson(l) \rfloor$
 	\State $generated \gets \{\}$
 	\For{$j \gets 1 \text{ to } 1 + Pl$}
 		\State $node \gets generateNode(n, \boldsymbol{a}) $ 
@@ -309,7 +309,7 @@ Next, a dictionary is created to determine in which transactions each pattern in
 \end{algorithmic}
 \end{algorithm}
 
-To better understand how this formula allows to determine the number of indexes to generate, let's suppose that we would like to compute the number of indexes for a pattern with 2 nodes, a pattern with 4 and a pattern with 6. Let's also suppose that the total number of transaction $T$ equals 100, that the minimum appearance threshold $t$ equals 20 and that the computed values for $minPatternNodes$ and $maxPatternNodes$ are 2 and 6 respectively. The number of appearances for the first pattern $k$ is going to be computed as (100 - (2 - 2) * (100 - 20) / (max(1, 6 - 2))). As we can notice, since the pattern is the smallest it can be, the whole right side of the formula is going to equal 0 because of the first expression (2 - 2) consequently, $k$ is going to equal $T$. This makes sense as the pattern is the smallest it could be and it should appear many times. Two things should be noted here: first, we chose $T$ as the maximum number of times a pattern should appear but any amount of times would be valid, second, even though a pattern should appear $T$ times it does not mean that it is going to appear in every transaction as the indexes are generated randomly and it may well be that the same index is generated more than once. For the second pattern the formula is going to be computed as (100 - (4 - 2) * (100 - 20) / (max(1, 6 - 2))). This time the right side of the expression is going to be equal to 40 and $k$ is going to equal $T$ - 40. This makes sense as the second pattern is twice as big compared to the first one and it should appear fewer times. For the last pattern the formula is going to be computed as (100 - (6 - 2) * (100 - 20) / (max(1, 6 - 2))). This time the right side of the expression is going to be equal to 80 and $k$ is going to equal $t$. Since the last pattern is the biggest, it makes sense for it to appear just enough times to make it frequent.
+To better understand how this formula allows to determine the number of indexes to generate, let us suppose that we would like to compute the number of indexes for a pattern with 2 nodes, a pattern with 4 and a pattern with 6. Let us also suppose that the total number of transaction $T$ equals 100, that the minimum appearance threshold $t$ equals 20 and that the computed values for $minPatternNodes$ and $maxPatternNodes$ are 2 and 6 respectively. The number of appearances for the first pattern $k$ is going to be computed as (100 - (2 - 2) * (100 - 20) / (max(1, 6 - 2))). As we can notice, since the pattern is the smallest it can be, the whole right side of the formula is going to equal 0 because of the first expression (2 - 2) consequently, $k$ is going to equal $T$. This makes sense as the pattern is the smallest it could be and it should appear many times. Two things should be noted here: first, we chose $T$ as the maximum number of times a pattern should appear but any amount of times would be valid, second, even though a pattern should appear $T$ times it does not mean that it is going to appear in every transaction as the indexes are generated randomly and it may well be that the same index is generated more than once. For the second pattern the formula is going to be computed as (100 - (4 - 2) * (100 - 20) / (max(1, 6 - 2))). This time the right side of the expression is going to be equal to 40 and $k$ is going to equal $T$ - 40. This makes sense as the second pattern is twice as big compared to the first one and it should appear fewer times. For the last pattern the formula is going to be computed as (100 - (6 - 2) * (100 - 20) / (max(1, 6 - 2))). This time the right side of the expression is going to be equal to 80 and $k$ is going to equal $t$. Since the last pattern is the biggest, it makes sense for it to appear just enough times to make it frequent.
 
 To sum it up, the formula makes so that the smallest patterns appear as many times as there are transactions, the biggest patterns appear just enough times to be frequent, and all the patterns in between appear an intermediate number of times between these two values.
 
@@ -472,7 +472,7 @@ The various steps and algorithms explained in Section~\ref{sec:generation} are i
 
 The software is written in Python\footnote{www.python.org}, and it makes use of the Numpy\footnote{http://www.numpy.org/} library \cite{oliphant2006guide} for manipulating arrays and matrices. The parameters are passed as arguments with flags and values when the program is started. The user can specify its own custom parameters, or use the default ones. It is also possible to set a flag to let the program print on the standard output which are the generated pattern. This way it is easy to test the correctness of the miner software that searches for these patterns.
 
-To generate a random string, a Universally unique identifier -- \texttt{uuid} -- of 128 bit is generated, then it is converted to an hexadecimal number and then casted to string. To generate random integers, the standard random library of python is used.
+To generate a random string, a Universally unique identifier -- \texttt{uuid} -- of 128 bit is generated, then it is converted to a hexadecimal number and then casted to string. To generate random integers, the standard random library of python is used.
 
 \subsection{Use the software}
 To use the software, it is mandatory to have a Python interpreter installed, at least with version 3.6, and to install the dependencies -- the libraries needed by the software -- by running the command \texttt{pip install -r requirements.txt}. To launch the software it is necessary to run the command \texttt{python src/main.py <arguments>}, with the following possible argument list:
@@ -528,7 +528,7 @@ As it can be seen by the graphs, the parameter $P$ plays an important role in th
 In this report is described the used methods, the algorithms and the results obtained during the implementation of a parameterized generator for frequent item sets mining in tree-like sequences of complex objects. Python is used to implement a generator which adjusts its outcome based on parameters such as pattern average length to vary the size of the patterns, pattern number to vary the number of patterns which can appear and pattern frequency to vary the minimum frequency that a pattern must have. Finally, the behaviour of the software is tested as its input increases. Of course, both the randomness with which data is generated, and the respect of the given parameters may lead to very long executions, but on the other hand the outcome contains unbiased and complete results, with patterns of different nature, structure and distribution.
 
 \subsection{Future works}
-It is possible to work on the performances of the software, trying to parallelize as much as possible the process of generating data. In fact, once the name of the fields $\boldsymbol{a}$ and the values of the attributes $\boldsymbol{M}$ are generated, it would be feasible to assign the generation of a single pattern to a specific thread. Since they would just read from $\boldsymbol{a}$ and $\boldsymbol{M}$, any synchronization protocol would not be needed in this phase.
+It is possible to work on the performances of the software, trying to parallelize as much as possible the process of generating data. In fact, once the name of the fields vector $\boldsymbol{a}$ is generated, it would be feasible to assign the generation of a single pattern to a specific thread. Since they would just read from $\boldsymbol{a}$, any synchronization protocol would not be needed in this phase.
 
 In parallel, some other threads might start to generate the real patterns, with random length and random contents. Once all the patterns are generated, each thread would take in charge the pattern generated by itself and it would append it to some transaction. In this phase some synchronization procedures would be necessary, since a transaction can contain more than one pattern, and therefore more than one thread would try to concurrently modify a single transaction.
 
